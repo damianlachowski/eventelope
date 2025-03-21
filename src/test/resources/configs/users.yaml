@@ -1,0 +1,13 @@
+admin:
+  authType: basic
+  username: admin
+  password: admin123
+
+api_user:
+  authType: apikey
+  apiKey: abc123xyz456
+  apiKeyHeader: X-API-Key
+
+jwt_user:
+  authType: jwt
+  token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c

@@ -1,0 +1,64 @@
+plugins {
+    id 'java'
+    id 'application'
+}
+
+group = 'com.eventelope'
+version = '1.0.0'
+sourceCompatibility = 17
+targetCompatibility = 17
+
+application {
+    mainClass = 'com.eventelope.Eventelope'
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    // YAML parsing
+    implementation 'org.yaml:snakeyaml:1.30'
+    
+    // REST API testing
+    implementation 'io.rest-assured:rest-assured:5.1.1'
+    
+    // JSON processing
+    implementation 'com.jayway.jsonpath:json-path:2.7.0'
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.13.3'
+    
+    // Logging
+    implementation 'org.slf4j:slf4j-api:1.7.36'
+    implementation 'ch.qos.logback:logback-classic:1.2.11'
+    
+    // Testing
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.2'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.2'
+}
+
+test {
+    useJUnitPlatform()
+}
+
+// Create a fat JAR with all dependencies
+jar {
+    manifest {
+        attributes 'Main-Class': 'com.eventelope.Eventelope'
+    }
+    
+    from {
+        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+    
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
+// Task to create an executable
+task createExecutable(type: Exec, dependsOn: jar) {
+    commandLine 'echo', 'java -jar build/libs/eventelope-1.0.0.jar "$@"'
+    doLast {
+        def file = new File("${project.buildDir}/eventelope")
+        file.text = 'java -jar ' + jar.archivePath.absolutePath + ' "$@"'
+        file.setExecutable(true)
+    }
+}

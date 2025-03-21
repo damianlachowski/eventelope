@@ -1,0 +1,19 @@
+metadata:
+  testName: Sample GET API Test
+  description: Tests a simple GET request to retrieve user information
+
+request:
+  method: GET
+  endpoint: https://jsonplaceholder.typicode.com/users/1
+  headers:
+    Accept: application/json
+
+verifier:
+  statusCode: 200
+  jsonPathAssertions:
+    - path: $.id
+      value: 1
+    - path: $.name
+      value: Leanne Graham
+    - path: $.email
+      value: Sincere@april.biz

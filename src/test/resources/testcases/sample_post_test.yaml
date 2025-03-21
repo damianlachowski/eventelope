@@ -1,0 +1,24 @@
+metadata:
+  testName: Sample POST API Test
+  description: Tests a POST request to create a new resource
+
+request:
+  method: POST
+  endpoint: https://jsonplaceholder.typicode.com/posts
+  headers:
+    Content-Type: application/json
+    Accept: application/json
+  body:
+    title: Eventelope Test
+    body: This is a test post created by Eventelope framework
+    userId: 1
+
+verifier:
+  statusCode: 201
+  jsonPathAssertions:
+    - path: $.title
+      value: Eventelope Test
+    - path: $.body
+      value: This is a test post created by Eventelope framework
+    - path: $.userId
+      value: 1
