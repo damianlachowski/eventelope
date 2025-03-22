@@ -4,13 +4,13 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Represents an API request with HTTP method, endpoint, headers, and body.
+ * Represents an API request with HTTP method, endpoint, headers, and payload.
  */
 public class ApiRequest {
     private String method;
     private String endpoint;
     private Map<String, String> headers = new HashMap<>();
-    private Object body;
+    private String payload; // Raw JSON string payload
     private String user; // Reference to a user in the users.yaml config
 
     public ApiRequest() {
@@ -64,12 +64,12 @@ public class ApiRequest {
         }
     }
 
-    public Object getBody() {
-        return body;
+    public String getPayload() {
+        return payload;
     }
 
-    public void setBody(Object body) {
-        this.body = body;
+    public void setPayload(String payload) {
+        this.payload = payload;
     }
 
     public String getUser() {
@@ -86,7 +86,7 @@ public class ApiRequest {
                 "method='" + method + '\'' +
                 ", endpoint='" + endpoint + '\'' +
                 ", headers=" + headers +
-                ", hasBody=" + (body != null) +
+                ", hasPayload=" + (payload != null) +
                 ", user='" + user + '\'' +
                 '}';
     }

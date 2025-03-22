@@ -1,0 +1,18 @@
+testName: Complex JSON POST Test
+description: Tests a POST request with a more complex JSON payload structure
+
+request:
+  method: POST
+  endpoint: https://jsonplaceholder.typicode.com/posts
+  # Complex nested JSON structure as a raw string
+  payload: '{"title": "Complex Test", "body": "Testing nested JSON structure", "userId": 2, "metadata": {"tags": ["test", "json", "complex"], "priority": "high", "nestingTest": {"level1": {"level2": {"level3": "deep nesting"}}}}}'
+
+verifier:
+  statusCode: 201
+  jsonPathAssertions:
+    - path: $.title
+      value: Complex Test
+    - path: $.body
+      value: Testing nested JSON structure
+    - path: $.userId
+      value: 2

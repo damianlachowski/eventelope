@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * Parses YAML test case files into TestCase objects.
@@ -56,17 +57,17 @@ public class YamlParser {
                 request.setHeaders(headers);
             }
             
-            // Parse body if it exists
-            if (requestMap.containsKey("body")) {
-                Object body = requestMap.get("body");
-                // Handle file reference for body
-                if (body instanceof String && ((String) body).startsWith("file:")) {
-                    String filePath = ((String) body).substring(5);
-                    String fileContent = readBodyFromFile(filePath);
-                    request.setBody(fileContent);
-                } else {
-                    request.setBody(body);
-                }
+            // Parse payload if it exists
+            if (requestMap.containsKey("payload")) {
+                String payload = (String) requestMap.get("payload");
+                request.setPayload(payload);
+            } else if (requestMap.containsKey("body")) {
+                // For backward compatibility, if body field exists
+                // This can be removed once all test files are migrated to payload format
+                LOGGER.warn("Found legacy 'body' field in test file: {}. Please update to use 'payload' field.", file.getName());
+                Map<String, Object> bodyMap = (Map<String, Object>) requestMap.get("body");
+                // Convert it to JSON for backward compatibility
+                request.setPayload(convertMapToJson(bodyMap));
             }
             
             // Parse user if it exists
@@ -151,5 +152,21 @@ public class YamlParser {
     private String readBodyFromFile(String filePath) throws IOException {
         Path path = Paths.get(filePath);
         return new String(Files.readAllBytes(path));
+    }
+    
+    /**
+     * Converts a Map to a JSON string for backward compatibility with legacy body format.
+     *
+     * @param map The Map to convert to JSON
+     * @return JSON string representation of the map
+     */
+    private String convertMapToJson(Map<String, Object> map) {
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            return mapper.writeValueAsString(map);
+        } catch (Exception e) {
+            LOGGER.error("Failed to convert Map to JSON", e);
+            throw new RuntimeException("Failed to convert request body to JSON string", e);
+        }
     }
 }

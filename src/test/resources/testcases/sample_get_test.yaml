@@ -4,7 +4,6 @@ description: Tests a simple GET request to retrieve user information
 request:
   method: GET
   endpoint: https://jsonplaceholder.typicode.com/users/1
-  # No need to specify Accept header as it will be added by default
 
 verifier:
   statusCode: 200

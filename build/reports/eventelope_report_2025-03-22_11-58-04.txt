@@ -1,10 +1,10 @@
 Eventelope Test Execution Report
 ==============================
-Generated at: 2025-03-22T11:31:47.018193735
+Generated at: 2025-03-22T11:58:04.226433883
 
 Summary:
-  Total Tests: 2
-  Passed: 2
+  Total Tests: 3
+  Passed: 3
   Failed: 0
   Success Rate: 100%
 
@@ -21,6 +21,13 @@ Detailed Results:
 2. Sample POST API Test
    Status: PASSED
    Description: Tests a POST request to create a new resource
+   HTTP Method: POST
+   Endpoint: https://jsonplaceholder.typicode.com/posts
+   Response Status: 201
+
+3. Complex JSON POST Test
+   Status: PASSED
+   Description: Tests a POST request with a more complex JSON payload structure
    HTTP Method: POST
    Endpoint: https://jsonplaceholder.typicode.com/posts
    Response Status: 201

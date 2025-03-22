@@ -41,8 +41,8 @@ public class RestClient {
             authHandler.applyAuthentication(requestSpec, request.getUser());
         }
         
-        // Add body for POST, PUT, PATCH methods
-        if (request.getBody() != null && 
+        // Add payload for POST, PUT, PATCH methods
+        if (request.getPayload() != null && 
             (request.getMethod().equals("POST") || 
              request.getMethod().equals("PUT") || 
              request.getMethod().equals("PATCH"))) {
@@ -53,8 +53,8 @@ public class RestClient {
                 requestSpec.header("Content-Type", "application/json");
             }
             
-            // Add the body
-            requestSpec.body(request.getBody());
+            // Add the payload as the request body
+            requestSpec.body(request.getPayload());
         }
         
         // Execute the request based on method
