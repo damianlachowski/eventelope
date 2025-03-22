@@ -105,7 +105,7 @@ public class TestResult {
     @Override
     public String toString() {
         return "TestResult{" +
-                "testCase=" + testCase.getMetadata().getTestName() +
+                "testCase=" + testCase.getTestName() +
                 ", passed=" + passed +
                 ", statusCode=" + statusCode +
                 ", executionTime=" + executionTime +

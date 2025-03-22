@@ -2,13 +2,13 @@ package com.eventelope.core;
 
 import com.eventelope.model.ApiRequest;
 import com.eventelope.model.ResponseVerifier;
-import com.eventelope.model.TestMetadata;
 
 /**
- * Represents a complete test case including metadata, request, and verification criteria.
+ * Represents a complete test case including test name, description, request, and verification criteria.
  */
 public class TestCase {
-    private TestMetadata metadata;
+    private String testName;
+    private String description;
     private ApiRequest request;
     private ResponseVerifier verifier;
     private String filePath;
@@ -16,19 +16,28 @@ public class TestCase {
     public TestCase() {
     }
 
-    public TestCase(TestMetadata metadata, ApiRequest request, ResponseVerifier verifier, String filePath) {
-        this.metadata = metadata;
+    public TestCase(String testName, String description, ApiRequest request, ResponseVerifier verifier, String filePath) {
+        this.testName = testName;
+        this.description = description;
         this.request = request;
         this.verifier = verifier;
         this.filePath = filePath;
     }
 
-    public TestMetadata getMetadata() {
-        return metadata;
+    public String getTestName() {
+        return testName;
     }
 
-    public void setMetadata(TestMetadata metadata) {
-        this.metadata = metadata;
+    public void setTestName(String testName) {
+        this.testName = testName;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
     }
 
     public ApiRequest getRequest() {
@@ -58,7 +67,8 @@ public class TestCase {
     @Override
     public String toString() {
         return "TestCase{" +
-                "metadata=" + metadata +
+                "testName='" + testName + '\'' +
+                ", description='" + description + '\'' +
                 ", filePath='" + filePath + '\'' +
                 '}';
     }

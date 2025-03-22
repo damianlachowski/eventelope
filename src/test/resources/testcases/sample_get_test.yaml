@@ -1,12 +1,10 @@
-metadata:
-  testName: Sample GET API Test
-  description: Tests a simple GET request to retrieve user information
+testName: Sample GET API Test
+description: Tests a simple GET request to retrieve user information
 
 request:
   method: GET
   endpoint: https://jsonplaceholder.typicode.com/users/1
-  headers:
-    Accept: application/json
+  # No need to specify Accept header as it will be added by default
 
 verifier:
   statusCode: 200

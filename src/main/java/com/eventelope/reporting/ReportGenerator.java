@@ -68,9 +68,9 @@ public class ReportGenerator {
             
             for (int i = 0; i < results.size(); i++) {
                 TestResult result = results.get(i);
-                writer.write((i + 1) + ". " + result.getTestCase().getMetadata().getTestName() + "\n");
+                writer.write((i + 1) + ". " + result.getTestCase().getTestName() + "\n");
                 writer.write("   Status: " + (result.isPassed() ? "PASSED" : "FAILED") + "\n");
-                writer.write("   Description: " + result.getTestCase().getMetadata().getDescription() + "\n");
+                writer.write("   Description: " + result.getTestCase().getDescription() + "\n");
                 writer.write("   HTTP Method: " + result.getTestCase().getRequest().getMethod() + "\n");
                 writer.write("   Endpoint: " + result.getTestCase().getRequest().getEndpoint() + "\n");
                 writer.write("   Response Status: " + result.getStatusCode() + "\n");
@@ -173,10 +173,10 @@ public class ReportGenerator {
                 String testStatus = result.isPassed() ? "passed" : "failed";
                 
                 writer.write("  <div class='test-case " + testStatus + "'>\n");
-                writer.write("    <h3>" + (i + 1) + ". " + result.getTestCase().getMetadata().getTestName() + "</h3>\n");
+                writer.write("    <h3>" + (i + 1) + ". " + result.getTestCase().getTestName() + "</h3>\n");
                 writer.write("    <p><span class='status " + testStatus + "'>" + testStatus.toUpperCase() + "</span></p>\n");
                 writer.write("    <div class='details'>\n");
-                writer.write("      <p><strong>Description:</strong> " + result.getTestCase().getMetadata().getDescription() + "</p>\n");
+                writer.write("      <p><strong>Description:</strong> " + result.getTestCase().getDescription() + "</p>\n");
                 writer.write("      <p><strong>HTTP Method:</strong> " + result.getTestCase().getRequest().getMethod() + "</p>\n");
                 writer.write("      <p><strong>Endpoint:</strong> " + result.getTestCase().getRequest().getEndpoint() + "</p>\n");
                 writer.write("      <p><strong>Response Status:</strong> " + result.getStatusCode() + "</p>\n");

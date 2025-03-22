@@ -40,12 +40,9 @@ public class YamlParser {
             TestCase testCase = new TestCase();
             testCase.setFilePath(file.getAbsolutePath());
             
-            // Parse test metadata
-            Map<String, Object> metadataMap = (Map<String, Object>) testYaml.get("metadata");
-            TestMetadata metadata = new TestMetadata();
-            metadata.setTestName((String) metadataMap.get("testName"));
-            metadata.setDescription((String) metadataMap.get("description"));
-            testCase.setMetadata(metadata);
+            // Parse test name and description directly from root level
+            testCase.setTestName((String) testYaml.get("testName"));
+            testCase.setDescription((String) testYaml.get("description"));
             
             // Parse API request
             Map<String, Object> requestMap = (Map<String, Object>) testYaml.get("request");
@@ -132,7 +129,7 @@ public class YamlParser {
                 try {
                     TestCase testCase = parseTestCase(file);
                     testCases.add(testCase);
-                    LOGGER.info("Parsed test case: {}", testCase.getMetadata().getTestName());
+                    LOGGER.info("Parsed test case: {}", testCase.getTestName());
                 } catch (Exception e) {
                     LOGGER.error("Error parsing test file: {}", file.getAbsolutePath(), e);
                 }

@@ -31,12 +31,16 @@ public class TestExecutor {
      * @return The test result
      */
     public TestResult executeTest(TestCase testCase) {
-        LOGGER.info("Executing test: {}", testCase.getMetadata().getTestName());
+        LOGGER.info("Executing test: {}", testCase.getTestName());
 
         TestResult result = new TestResult(testCase);
         
         try {
             ApiRequest request = testCase.getRequest();
+            
+            // Apply default headers
+            request.applyDefaultHeaders();
+            
             Response response = restClient.executeRequest(request);
             
             result.setResponse(response);
@@ -50,18 +54,18 @@ public class TestExecutor {
             
             if (assertionFailures.isEmpty()) {
                 result.setPassed(true);
-                LOGGER.info("Test passed: {}", testCase.getMetadata().getTestName());
+                LOGGER.info("Test passed: {}", testCase.getTestName());
             } else {
                 result.setPassed(false);
                 result.setFailureMessages(assertionFailures);
                 LOGGER.info("Test failed: {} - Failures: {}", 
-                    testCase.getMetadata().getTestName(), 
+                    testCase.getTestName(), 
                     String.join(", ", assertionFailures));
             }
         } catch (Exception e) {
             result.setPassed(false);
             result.setFailureMessages(List.of("Exception occurred: " + e.getMessage()));
-            LOGGER.error("Error executing test: " + testCase.getMetadata().getTestName(), e);
+            LOGGER.error("Error executing test: " + testCase.getTestName(), e);
         }
 
         return result;

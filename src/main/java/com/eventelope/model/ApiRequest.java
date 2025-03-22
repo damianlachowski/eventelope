@@ -44,6 +44,26 @@ public class ApiRequest {
         this.headers.put(name, value);
     }
 
+    /**
+     * Apply default headers while preserving any user-defined headers
+     */
+    public void applyDefaultHeaders() {
+        if (headers == null) {
+            headers = new HashMap<>();
+        }
+        
+        // Always add Accept header (will not override if already exists)
+        if (!headers.containsKey("Accept")) {
+            headers.put("Accept", "application/json");
+        }
+        
+        // Add Content-Type for POST requests (will not override if already exists)
+        if ((method.equalsIgnoreCase("POST") || method.equalsIgnoreCase("PUT") || 
+             method.equalsIgnoreCase("PATCH")) && !headers.containsKey("Content-Type")) {
+            headers.put("Content-Type", "application/json");
+        }
+    }
+
     public Object getBody() {
         return body;
     }

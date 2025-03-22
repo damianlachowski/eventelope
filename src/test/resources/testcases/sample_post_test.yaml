@@ -1,13 +1,10 @@
-metadata:
-  testName: Sample POST API Test
-  description: Tests a POST request to create a new resource
+testName: Sample POST API Test
+description: Tests a POST request to create a new resource
 
 request:
   method: POST
   endpoint: https://jsonplaceholder.typicode.com/posts
-  headers:
-    Content-Type: application/json
-    Accept: application/json
+  # Content-Type and Accept headers will be added automatically by default
   body:
     title: Eventelope Test
     body: This is a test post created by Eventelope framework
