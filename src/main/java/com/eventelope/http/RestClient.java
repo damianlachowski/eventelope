@@ -58,11 +58,6 @@ public class RestClient {
                 endpoint = replaceVariables(endpoint, context);
             }
         }
-        
-        // Store the original endpoint before processing it further
-        String originalEndpoint = endpoint;
-        
-        // Process the endpoint to handle relative/absolute URLs
         endpoint = processEndpoint(endpoint);
         
         // Log the timeout settings but don't apply them yet
@@ -80,9 +75,6 @@ public class RestClient {
         
         RequestSpecification requestSpec = RestAssured.given()
                 .log().all();  // Log all request details
-        
-        // Extract path parameters and convert ${var} to {var} format for RestAssured
-        endpoint = extractAndSetPathParameters(requestSpec, endpoint, context);
         
         // Add headers with variable and template substitution
         if (request.getHeaders() != null) {
@@ -144,9 +136,6 @@ public class RestClient {
         // Execute the request based on method
         Response response;
         try {
-            // Log the final endpoint after all replacements and path parameter settings
-            LOGGER.debug("Final endpoint for REST request: {}", endpoint);
-            
             switch (request.getMethod()) {
                 case "GET":
                     response = requestSpec.get(endpoint);
@@ -247,68 +236,5 @@ public class RestClient {
         matcher.appendTail(result);
         
         return result.toString();
-    }
-    
-    /**
-     * Extract path parameters from URL and set them on RequestSpecification.
-     * For example, for a URL like "https://jsonplaceholder.typicode.com/posts/${postId}",
-     * it will extract 'postId' as a path parameter and set its value.
-     *
-     * @param requestSpec The RequestSpecification to set path parameters on
-     * @param endpoint The original endpoint URL (may contain ${variable} references)
-     * @param context The test context with variable values
-     * @return The updated endpoint with ${variable} references converted to {variable} for RestAssured
-     */
-    private String extractAndSetPathParameters(RequestSpecification requestSpec, String endpoint, TestContext context) {
-        if (endpoint == null || context == null) {
-            return endpoint;
-        }
-        
-        // Handle curly brace path params in URLs: /posts/{postId}
-        Pattern curlyBracePattern = Pattern.compile("\\{([^}]+)\\}");
-        Matcher curlyBraceMatcher = curlyBracePattern.matcher(endpoint);
-        
-        while (curlyBraceMatcher.find()) {
-            String paramName = curlyBraceMatcher.group(1);
-            // Look for this param in the context
-            Object paramValue = context.getVariable(paramName);
-            
-            if (paramValue != null) {
-                // Add path parameter to REST Assured request spec
-                requestSpec.pathParam(paramName, paramValue.toString());
-                LOGGER.debug("Set path parameter '{}' to value '{}'", paramName, paramValue);
-            } else {
-                LOGGER.warn("Path parameter '{}' not found in context", paramName);
-            }
-        }
-        
-        // Also handle ${variable} patterns that need to be converted to path params
-        if (endpoint.contains("${")) {
-            Pattern dollarPattern = Pattern.compile("\\$\\{([^}]+)\\}");
-            Matcher dollarMatcher = dollarPattern.matcher(endpoint);
-            
-            while (dollarMatcher.find()) {
-                String paramName = dollarMatcher.group(1);
-                Object paramValue = context.getVariable(paramName);
-                
-                if (paramValue != null) {
-                    // Convert the URL to use {paramName} format which RestAssured understands
-                    String paramPlaceholder = "${" + paramName + "}";
-                    int startIdx = endpoint.indexOf(paramPlaceholder);
-                    if (startIdx >= 0) {
-                        // Replace the ${paramName} with {paramName} in the endpoint
-                        endpoint = endpoint.replace(paramPlaceholder, "{" + paramName + "}");
-                        
-                        // Add path parameter to REST Assured request spec
-                        requestSpec.pathParam(paramName, paramValue.toString());
-                        LOGGER.debug("Converted and set path parameter '{}' to value '{}'", paramName, paramValue);
-                    }
-                } else {
-                    LOGGER.warn("Path parameter '{}' not found in context", paramName);
-                }
-            }
-        }
-        
-        return endpoint;
     }
 }
