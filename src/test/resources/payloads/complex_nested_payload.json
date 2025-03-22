@@ -1,0 +1,43 @@
+{
+  "user": {
+    "profile": {
+      "firstName": "John",
+      "lastName": "Doe",
+      "email": "john.doe@example.com",
+      "preferences": {
+        "theme": "dark",
+        "notifications": {
+          "email": true,
+          "sms": false,
+          "push": true
+        }
+      }
+    },
+    "address": {
+      "street": "123 Main St",
+      "city": "Anytown",
+      "state": "CA",
+      "zipCode": "12345",
+      "coordinates": {
+        "latitude": 37.7749,
+        "longitude": -122.4194
+      }
+    },
+    "subscription": {
+      "plan": "premium",
+      "startDate": "2025-01-15",
+      "endDate": "2026-01-15",
+      "features": ["api-testing", "ci-integration", "reporting", "advanced-assertions"],
+      "usage": {
+        "apiCalls": 5000,
+        "storage": "10GB",
+        "concurrentTests": 10
+      }
+    }
+  },
+  "metadata": {
+    "createdAt": "2025-03-22T12:00:00Z",
+    "version": "2.1.0",
+    "tags": ["eventelope", "demo", "complex-payload"]
+  }
+}

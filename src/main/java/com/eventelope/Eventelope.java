@@ -154,6 +154,13 @@ public class Eventelope {
         
         // Run tests based on arguments
         boolean allPassed;
+        
+        // Check if testDir is actually a single file path
+        if (singleTestFile == null && new File(testDir).isFile()) {
+            LOGGER.info("Detected file path provided to --testDir, treating as a single test file");
+            singleTestFile = testDir;
+        }
+        
         if (singleTestFile != null) {
             allPassed = eventelope.runTest(singleTestFile, reportDir);
         } else {

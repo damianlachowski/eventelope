@@ -92,14 +92,27 @@ public class AssertionProcessor {
     private void verifyJsonPathAssertions(Response response, ResponseVerifier verifier, List<String> failures) {
         if (verifier.getJsonPathAssertions() != null && !verifier.getJsonPathAssertions().isEmpty()) {
             String responseBody = response.getBody().asString();
+            LOGGER.debug("Verifying JSON path assertions on response body: {}", responseBody);
             
             for (Map<String, Object> assertion : verifier.getJsonPathAssertions()) {
                 String path = (String) assertion.get("path");
-                Object expectedValue = assertion.get("value");
                 
-                String failureMessage = jsonPathAssertion.assertJsonPath(responseBody, path, expectedValue);
+                // Support both 'value' and 'expected' keys for compatibility
+                Object expectedValue = assertion.containsKey("expected") ? 
+                    assertion.get("expected") : assertion.get("value");
+                
+                // Get the assertion type if specified, default to 'equals'
+                String assertionType = (String) assertion.getOrDefault("type", JsonPathAssertion.EQUALS);
+                
+                LOGGER.debug("Verifying assertion - Path: {}, Expected: {}, Type: {}", 
+                           path, expectedValue, assertionType);
+                
+                String failureMessage = jsonPathAssertion.assertJsonPath(responseBody, path, expectedValue, assertionType);
                 if (failureMessage != null) {
+                    LOGGER.warn("Assertion failed: {}", failureMessage);
                     failures.add(failureMessage);
+                } else {
+                    LOGGER.debug("Assertion passed for path: {}", path);
                 }
             }
         }

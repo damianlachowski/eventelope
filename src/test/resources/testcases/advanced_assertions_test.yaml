@@ -1,0 +1,44 @@
+testName: Advanced Assertions Test
+description: Demonstrates the use of advanced assertion types beyond simple equality
+
+request:
+  method: GET
+  endpoint: https://jsonplaceholder.typicode.com/users/1
+
+verifier:
+  statusCode: 200
+  jsonPathAssertions:
+    # Standard equality assertion
+    - path: $.name
+      expected: "Leanne Graham"
+    
+    # Contains assertion
+    - path: $.email
+      expected: "Sincere"
+      type: contains
+    
+    # Starts with assertion
+    - path: $.username
+      expected: "Bret"
+      type: startsWith
+    
+    # Regex pattern matching
+    - path: $.email
+      expected: ".*@.*\\..*"
+      type: matches
+      
+    # Numeric comparison with negative numbers
+    # The API returns "-37.3159" as a string, but our numeric comparison
+    # should correctly convert it to a number before comparison
+    # With negative numbers, -37.3159 is LESS than -30.0
+    - path: $.address.geo.lat
+      expected: -30
+      type: lessThan
+      
+    # Existence check
+    - path: $.company
+      type: exists
+      
+    # Not empty check
+    - path: $.phone
+      type: isNotEmpty

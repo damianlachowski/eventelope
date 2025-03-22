@@ -1,17 +1,20 @@
-testName: Complex JSON POST Test
-description: Tests a POST request with a more complex JSON payload structure
+testName: Complex Post Test with File Payload
+description: This test sends a POST request with a payload loaded from an external file
 
 request:
   method: POST
   endpoint: https://jsonplaceholder.typicode.com/posts
-  payload: '{"title": "Complex Test", "body": "Testing nested JSON structure", "userId": 2, "metadata": {"tags": ["test", "json", "complex"], "priority": "high", "nestingTest": {"level1": {"level2": {"level3": "deep nesting"}}}}}'
+  headers:
+    Content-Type: application/json
+    X-Custom-Header: file-based-payload-test
+  payload: file:../payloads/sample_post_payload.json
 
 verifier:
   statusCode: 201
   jsonPathAssertions:
     - path: $.title
-      value: Complex Test
+      expected: "Eventelope Test"
     - path: $.body
-      value: Testing nested JSON structure
+      expected: "This is a test post created by Eventelope framework"
     - path: $.userId
-      value: 2
+      expected: 1

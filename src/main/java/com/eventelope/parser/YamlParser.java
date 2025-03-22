@@ -58,8 +58,30 @@ public class YamlParser {
             
             // Parse payload if it exists
             if (requestMap.containsKey("payload")) {
-                String payload = (String) requestMap.get("payload");
-                request.setPayload(payload);
+                String payloadValue = (String) requestMap.get("payload");
+                
+                // Check if payload should be loaded from file
+                if (payloadValue.trim().startsWith("file:")) {
+                    LOGGER.info("Loading payload from file for test: {}", testCase.getTestName());
+                    String filePath = payloadValue.substring(5).trim(); // Remove "file:" prefix
+                    
+                    // Resolve the file path (handle relative paths)
+                    String resolvedPath = resolveFilePath(filePath, file);
+                    LOGGER.debug("Resolved payload file path: {}", resolvedPath);
+                    
+                    try {
+                        String fileContent = readPayloadFromFile(resolvedPath);
+                        request.setPayload(fileContent);
+                        LOGGER.debug("Successfully loaded payload from file: {}", resolvedPath);
+                    } catch (IOException e) {
+                        LOGGER.error("Failed to load payload from file: {}", resolvedPath, e);
+                        throw new RuntimeException("Failed to load payload from file: " + resolvedPath + 
+                                                 " - Error: " + e.getMessage(), e);
+                    }
+                } else {
+                    // Existing behavior for inline payloads
+                    request.setPayload(payloadValue);
+                }
             }
             
             // Parse user if it exists
@@ -137,12 +159,88 @@ public class YamlParser {
 
     /**
      * Read payload content from a JSON file.
+     * Performs basic validation to ensure the file contains valid JSON.
      *
      * @param filePath Path to the JSON file
      * @return The file content as a string
+     * @throws IOException If file cannot be read or doesn't contain valid JSON
      */
     private String readPayloadFromFile(String filePath) throws IOException {
         Path path = Paths.get(filePath);
-        return new String(Files.readAllBytes(path));
+        
+        if (!Files.exists(path)) {
+            throw new IOException("Payload file not found: " + filePath);
+        }
+        
+        String content = new String(Files.readAllBytes(path));
+        
+        // Basic JSON validation - this will throw an exception if the content is not valid JSON
+        try {
+            // Use Jackson or another JSON library if available in the classpath
+            // For now, using a simple check that might not catch all invalid JSON cases
+            if (content.trim().isEmpty()) {
+                throw new IOException("Payload file is empty: " + filePath);
+            }
+            
+            char firstChar = content.trim().charAt(0);
+            char lastChar = content.trim().charAt(content.trim().length() - 1);
+            
+            // Check if the JSON is an object or array
+            if (!((firstChar == '{' && lastChar == '}') || (firstChar == '[' && lastChar == ']'))) {
+                throw new IOException("Payload file does not contain valid JSON: " + filePath);
+            }
+        } catch (Exception e) {
+            throw new IOException("Failed to validate JSON payload from file: " + filePath, e);
+        }
+        
+        return content;
+    }
+    
+    /**
+     * Resolves the file path, handling both absolute and relative paths.
+     * Supports multiple path resolution strategies:
+     * 1. Absolute paths (starting with /)
+     * 2. Project-relative paths (starting with src/)
+     * 3. Test-directory-relative paths (starting with ./ or ../)
+     * 4. Simple filenames (resolved relative to test file directory)
+     * 
+     * @param filePath The original file path (absolute or relative)
+     * @param testFile The test file from which the path is referenced
+     * @return The resolved absolute file path
+     */
+    private String resolveFilePath(String filePath, File testFile) {
+        // Handle null or empty paths
+        if (filePath == null || filePath.trim().isEmpty()) {
+            throw new IllegalArgumentException("File path cannot be null or empty");
+        }
+        
+        // Normalize the file path by replacing backslashes with forward slashes
+        filePath = filePath.replace('\\', '/');
+        
+        // If already absolute, return as is
+        if (new File(filePath).isAbsolute()) {
+            LOGGER.debug("Using absolute path: {}", filePath);
+            return filePath;
+        }
+        
+        // If starting with "src/", treat as relative to project root
+        if (filePath.startsWith("src/")) {
+            LOGGER.debug("Using project-relative path: {}", filePath);
+            return filePath;
+        }
+        
+        // If starting with "~/", resolve relative to user home directory
+        if (filePath.startsWith("~/")) {
+            String userHome = System.getProperty("user.home");
+            String resolvedPath = userHome + filePath.substring(1);
+            LOGGER.debug("Resolved home-relative path '{}' to '{}'", filePath, resolvedPath);
+            return resolvedPath;
+        }
+        
+        // Otherwise, resolve relative to the test file's directory
+        File testDir = testFile.getParentFile();
+        String resolvedPath = new File(testDir, filePath).getAbsolutePath();
+        LOGGER.debug("Resolved test-relative path '{}' to '{}'", filePath, resolvedPath);
+        return resolvedPath;
     }
 }
