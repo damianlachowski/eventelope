@@ -1,0 +1,65 @@
+test:
+  name: Template Variables Test
+  description: Test the template variables functionality for advanced payload templating
+  
+  setup:
+    - name: Initialize test variables
+      request:
+        method: GET
+        endpoint: /posts/1
+      
+  execution:
+    - name: Create post with template variables
+      request:
+        method: POST
+        endpoint: /posts
+        headers:
+          Content-Type: application/json
+          X-User-Id: "{{userId}}"  # Using template variable in headers
+        payload: |
+          {
+            "title": "{{postTitle}}",
+            "body": "{{postBody}}",
+            "userId": 1
+          }
+        templateVariables:
+          - name: userId
+            value: "12345"
+          - name: postTitle
+            value: "Template Test Post"
+          - name: postBody
+            value: "This is a post created using template variables"
+      verify:
+        - type: status
+          expected: 201
+        - type: jsonPath
+          path: $.title
+          expected: "Template Test Post"
+        - type: jsonPath
+          path: $.body
+          expected: "This is a post created using template variables"
+    
+    - name: Create another post with mixed variables
+      request:
+        method: POST
+        endpoint: /posts
+        headers:
+          Content-Type: application/json
+        payload: |
+          {
+            "title": "Post from ${postId}",
+            "body": "{{postBody}} with ${postId}",
+            "userId": 1
+          }
+        templateVariables:
+          - name: postBody
+            value: "This is a mixed variable post"
+      verify:
+        - type: status
+          expected: 201
+
+  cleanup:
+    - name: Cleanup created posts
+      request:
+        method: DELETE
+        endpoint: /posts/1

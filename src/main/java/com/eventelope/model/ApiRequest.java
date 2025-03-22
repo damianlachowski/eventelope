@@ -1,6 +1,10 @@
 package com.eventelope.model;
 
+import com.eventelope.template.TemplateVariable;
+
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -14,6 +18,7 @@ public class ApiRequest {
     private String user; // Reference to a user in the users.yaml config
     private Integer timeout; // Socket timeout in milliseconds
     private Integer connectionTimeout; // Connection timeout in milliseconds
+    private List<TemplateVariable> templateVariables = new ArrayList<>(); // Variables for template substitution
 
     public ApiRequest() {
         this.timeout = 0; // Use default timeout from RestClient
@@ -119,6 +124,35 @@ public class ApiRequest {
     public void setConnectionTimeout(Integer connectionTimeout) {
         this.connectionTimeout = connectionTimeout != null ? connectionTimeout : 0;
     }
+    
+    /**
+     * Get the list of template variables for payload templating.
+     * 
+     * @return The list of template variables
+     */
+    public List<TemplateVariable> getTemplateVariables() {
+        return templateVariables;
+    }
+    
+    /**
+     * Set the list of template variables for payload templating.
+     * 
+     * @param templateVariables The list of template variables
+     */
+    public void setTemplateVariables(List<TemplateVariable> templateVariables) {
+        this.templateVariables = templateVariables != null ? templateVariables : new ArrayList<>();
+    }
+    
+    /**
+     * Add a template variable for payload templating.
+     * 
+     * @param variable The template variable to add
+     */
+    public void addTemplateVariable(TemplateVariable variable) {
+        if (variable != null) {
+            this.templateVariables.add(variable);
+        }
+    }
 
     @Override
     public String toString() {
@@ -138,6 +172,10 @@ public class ApiRequest {
         
         if (connectionTimeout > 0) {
             sb.append(", connectionTimeout=").append(connectionTimeout).append("ms");
+        }
+        
+        if (!templateVariables.isEmpty()) {
+            sb.append(", templateVariables=").append(templateVariables.size());
         }
         
         sb.append('}');

@@ -3,6 +3,7 @@ package com.eventelope.http;
 import com.eventelope.auth.AuthenticationHandler;
 import com.eventelope.context.TestContext;
 import com.eventelope.model.ApiRequest;
+import com.eventelope.template.TemplateProcessor;
 import io.restassured.RestAssured;
 import io.restassured.response.Response;
 import io.restassured.specification.RequestSpecification;
@@ -19,6 +20,7 @@ import java.util.regex.Pattern;
 public class RestClient {
     private static final Logger LOGGER = LoggerFactory.getLogger(RestClient.class);
     private final AuthenticationHandler authHandler = new AuthenticationHandler();
+    private final TemplateProcessor templateProcessor = new TemplateProcessor();
 
     // Default base URL for relative paths
     private static final String DEFAULT_BASE_URL = "https://jsonplaceholder.typicode.com";
@@ -47,7 +49,14 @@ public class RestClient {
         // Process endpoint with variable substitution if context is provided
         String endpoint = request.getEndpoint();
         if (context != null && endpoint != null) {
-            endpoint = replaceVariables(endpoint, context);
+            if (!request.getTemplateVariables().isEmpty()) {
+                // Use the TemplateProcessor to handle both ${var} and {{template}} variables
+                endpoint = templateProcessor.processTemplate(endpoint, request.getTemplateVariables(), context);
+                LOGGER.debug("Endpoint after template processing: {}", endpoint);
+            } else {
+                // Backward compatibility: use the old variable replacement method
+                endpoint = replaceVariables(endpoint, context);
+            }
         }
         endpoint = processEndpoint(endpoint);
         
@@ -67,10 +76,25 @@ public class RestClient {
         RequestSpecification requestSpec = RestAssured.given()
                 .log().all();  // Log all request details
         
-        // Add headers
+        // Add headers with variable and template substitution
         if (request.getHeaders() != null) {
             for (Map.Entry<String, String> header : request.getHeaders().entrySet()) {
-                requestSpec.header(header.getKey(), header.getValue());
+                String headerName = header.getKey();
+                String headerValue = header.getValue();
+                
+                // Process header value if context is available
+                if (context != null && headerValue != null) {
+                    if (!request.getTemplateVariables().isEmpty()) {
+                        // Use template processor for headers as well
+                        headerValue = templateProcessor.processTemplate(headerValue, request.getTemplateVariables(), context);
+                        LOGGER.debug("Header '{}' value after template processing: {}", headerName, headerValue);
+                    } else {
+                        // Backward compatibility
+                        headerValue = replaceVariables(headerValue, context);
+                    }
+                }
+                
+                requestSpec.header(headerName, headerValue);
             }
         }
         
@@ -91,11 +115,18 @@ public class RestClient {
                 requestSpec.header("Content-Type", "application/json");
             }
             
-            // Replace variables in payload if context is provided
+            // Process payload with both variable and template substitution
             String payload = request.getPayload();
             if (context != null) {
-                payload = replaceVariables(payload, context);
-                LOGGER.debug("Payload after variable replacement: {}", payload);
+                if (!request.getTemplateVariables().isEmpty()) {
+                    // Use the TemplateProcessor to handle both ${var} and {{template}} variables
+                    payload = templateProcessor.processTemplate(payload, request.getTemplateVariables(), context);
+                    LOGGER.debug("Payload after template processing: {}", payload);
+                } else {
+                    // Backward compatibility: use the old variable replacement method
+                    payload = replaceVariables(payload, context);
+                    LOGGER.debug("Payload after variable replacement: {}", payload);
+                }
             }
             
             // Add the payload as the request body

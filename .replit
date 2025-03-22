@@ -39,6 +39,10 @@ args = "Eventelope All Tests"
 task = "workflow.run"
 args = "Retry and Timeout Test"
 
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Template Variables Test"
+
 [[workflows.workflow]]
 name = "Eventelope Runner"
 author = "agent"
@@ -137,6 +141,20 @@ task = "packager.installForAll"
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "./gradlew run --args=\"--testDir src/test/resources/testcases/retry_and_timeout_test.yaml\""
+
+[[workflows.workflow]]
+name = "Template Variables Test"
+author = "agent"
+
+[workflows.workflow.metadata]
+agentRequireRestartOnSave = false
+
+[[workflows.workflow.tasks]]
+task = "packager.installForAll"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "./gradlew run --args=\"--testDir src/test/resources/testcases/template_variables_test.yaml\""
 
 [deployment]
 run = ["sh", "-c", "./gradlew run --args=\"--testDir src/test/resources/testcases\""]

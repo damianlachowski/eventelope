@@ -1,0 +1,26 @@
+Eventelope Test Execution Report
+==============================
+Generated at: 2025-03-22T17:54:55.150006565
+
+Summary:
+  Total Tests: 1
+  Passed: 0
+  Failed: 1
+  Success Rate: 0%
+
+Detailed Results:
+================
+
+1. Retry and Timeout Test
+   Status: FAILED
+   Description: Demonstrates the retry functionality and timeout settings for handling eventual consistency between services
+   Executed Steps: 4
+     Steps:
+       - Get First Post
+       - Step with Retry Configuration
+       - Step with Specific Timeouts
+       - Cleanup Step
+   Response Status: 200
+   Failure Reasons:
+     - Step 'Intentionally Failing Step with Retries': Status code assertion failed: expected 200 but got 404 after 2 retries
+
