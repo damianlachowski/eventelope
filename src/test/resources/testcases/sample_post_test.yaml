@@ -1,15 +1,13 @@
-testName: Sample POST API Test
-description: Tests a POST request to create a new resource
+
+testName: Sample POST Test
+description: Basic POST request validation
 
 request:
   method: POST
   endpoint: https://jsonplaceholder.typicode.com/posts
-  payload: |
-    {
-      "title": "Eventelope Test",
-      "body": "This is a test post created by Eventelope framework",
-      "userId": 1
-    }
+  headers:
+    Content-Type: application/json
+  payload: file:../payloads/sample_post_payload.json
 
 verifier:
   statusCode: 201
