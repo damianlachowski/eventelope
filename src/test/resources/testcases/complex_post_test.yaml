@@ -3,8 +3,7 @@ description: Tests POST request with complex nested JSON payload
 
 request:
   method: POST
-  endpoint: https://jsonplaceholder.typicode.com/posts
-  
+  endpoint: https://jsonplaceholder.typicode.com/posts  
   payload: file:../payloads/complex_post_payload.json
 
 verifier:
