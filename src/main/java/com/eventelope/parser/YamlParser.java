@@ -22,19 +22,6 @@ import java.util.stream.Collectors;
 
 /**
  * Parses YAML test case files into TestCase objects.
- * 
- * Supported payload formats:
- * 1. Block scalar format for inline JSON:
- *    payload: |
- *      {
- *        "key": "value",
- *        "nested": {
- *          "key": "value"
- *        }
- *      }
- * 
- * 2. File reference format:
- *    payload: file:path/to/payload.json
  */
 public class YamlParser {
     private static final Logger LOGGER = LoggerFactory.getLogger(YamlParser.class);
@@ -92,7 +79,7 @@ public class YamlParser {
                                                  " - Error: " + e.getMessage(), e);
                     }
                 } else {
-                    // Use the payload directly from YAML (should be using block scalar format)
+                    // Existing behavior for inline payloads
                     request.setPayload(payloadValue);
                 }
             }
