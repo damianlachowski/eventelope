@@ -1,0 +1,55 @@
+testName: Complex JSON Payload Test
+description: This test demonstrates using block scalar format for complex nested JSON payloads
+
+request:
+  method: POST
+  endpoint: https://jsonplaceholder.typicode.com/posts
+  headers:
+    Content-Type: application/json
+    X-Custom-Header: complex-json-test
+  payload: |
+    {
+      "title": "Complex Test",
+      "body": "Testing nested JSON structure",
+      "userId": 2,
+      "metadata": {
+        "tags": ["test", "json", "complex"],
+        "priority": "high",
+        "nestingTest": {
+          "level1": {
+            "level2": {
+              "level3": "deep nesting"
+            }
+          }
+        }
+      },
+      "user": {
+        "profile": {
+          "firstName": "Jane",
+          "lastName": "Doe",
+          "preferences": {
+            "theme": "light",
+            "notifications": true
+          }
+        },
+        "subscription": {
+          "plan": "premium",
+          "features": ["api-testing", "reporting", "automation"],
+          "active": true
+        }
+      }
+    }
+
+verifier:
+  statusCode: 201
+  jsonPathAssertions:
+    - path: $.title
+      expected: "Complex Test"
+    - path: $.metadata.tags[1]
+      expected: "json"
+    - path: $.metadata.nestingTest.level1.level2.level3
+      expected: "deep nesting"
+    - path: $.user.profile.firstName
+      expected: "Jane"
+    - path: $.user.subscription.features[2]
+      expected: "automation"
