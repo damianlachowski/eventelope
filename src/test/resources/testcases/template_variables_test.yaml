@@ -1,3 +1,4 @@
+
 test:
   name: Template Variables Test
   description: Test the template variables functionality for advanced payload templating
@@ -15,13 +16,8 @@ test:
         endpoint: /posts
         headers:
           Content-Type: application/json
-          X-User-Id: "{{userId}}"  # Using template variable in headers
-        payload: |
-          {
-            "title": "{{postTitle}}",
-            "body": "{{postBody}}",
-            "userId": 1
-          }
+          X-User-Id: "{{userId}}"
+        payload: file:../payloads/templates/post_template.json
         templateVariables:
           - name: userId
             value: "12345"
@@ -45,12 +41,7 @@ test:
         endpoint: /posts
         headers:
           Content-Type: application/json
-        payload: |
-          {
-            "title": "Post from ${postId}",
-            "body": "{{postBody}} with ${postId}",
-            "userId": 1
-          }
+        payload: file:../payloads/templates/mixed_variables_template.json
         templateVariables:
           - name: postBody
             value: "This is a mixed variable post"

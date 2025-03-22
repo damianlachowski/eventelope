@@ -1,0 +1,6 @@
+
+{
+  "title": "Post from {{userId}}",
+  "body": "{{postBody}} with {{postId}}",
+  "userId": 1
+}
