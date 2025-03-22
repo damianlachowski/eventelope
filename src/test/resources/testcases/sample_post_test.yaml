@@ -5,8 +5,7 @@ description: Basic POST request validation
 request:
   method: POST
   endpoint: https://jsonplaceholder.typicode.com/posts
-  headers:
-    Content-Type: application/json
+  
   payload: file:../payloads/sample_post_payload.json
 
 verifier:
