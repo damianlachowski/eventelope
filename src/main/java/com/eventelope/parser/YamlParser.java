@@ -154,9 +154,15 @@ public class YamlParser {
     private ApiRequest parseRequest(Map<String, Object> requestMap, File testFile) {
         ApiRequest request = new ApiRequest();
         
-        // Method and endpoint are mandatory
+        // Method is mandatory
         request.setMethod((String) requestMap.get("method"));
-        request.setEndpoint((String) requestMap.get("endpoint"));
+        
+        // Support both endpoint and url fields for flexibility
+        if (requestMap.containsKey("endpoint")) {
+            request.setEndpoint((String) requestMap.get("endpoint"));
+        } else if (requestMap.containsKey("url")) {
+            request.setEndpoint((String) requestMap.get("url"));
+        }
         
         // Parse headers if they exist
         if (requestMap.containsKey("headers")) {
@@ -225,6 +231,24 @@ public class YamlParser {
         if (verifyMap.containsKey("jsonPathAssertions")) {
             List<Map<String, Object>> assertions = (List<Map<String, Object>>) verifyMap.get("jsonPathAssertions");
             verifier.setJsonPathAssertions(assertions);
+        }
+        
+        // Parse extractions if they exist
+        if (verifyMap.containsKey("extractions")) {
+            List<Map<String, String>> extractionMaps = (List<Map<String, String>>) verifyMap.get("extractions");
+            List<com.eventelope.extraction.ExtractionDefinition> extractions = new ArrayList<>();
+            
+            for (Map<String, String> extractionMap : extractionMaps) {
+                com.eventelope.extraction.ExtractionDefinition extraction = new com.eventelope.extraction.ExtractionDefinition();
+                extraction.setFrom(extractionMap.get("from"));
+                extraction.setStoreTo(extractionMap.get("storeTo"));
+                extractions.add(extraction);
+                
+                LOGGER.debug("Added extraction from '{}' to variable '{}'", 
+                    extraction.getFrom(), extraction.getStoreTo());
+            }
+            
+            verifier.setExtractions(extractions);
         }
         
         return verifier;

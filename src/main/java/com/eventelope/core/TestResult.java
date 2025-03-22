@@ -5,11 +5,13 @@ import io.restassured.response.Response;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Contains the results of a test execution including status, response data, and any failure messages.
- * Updated to support the new structured test format.
+ * Updated to support the new structured test format and variable storage.
  */
 public class TestResult {
     private TestCase testCase;
@@ -23,6 +25,8 @@ public class TestResult {
     private long executionDurationMs;
     // For tracking successfully executed steps
     private List<String> executedSteps = new ArrayList<>();
+    // For storing test variables (extracted values)
+    private Map<String, Object> variables = new HashMap<>();
 
     public TestResult(TestCase testCase) {
         this.testCase = testCase;
@@ -126,6 +130,34 @@ public class TestResult {
     public String getTestDescription() {
         return testCase.getDescription();
     }
+    
+    /**
+     * Get the variables map containing all extracted values
+     */
+    public Map<String, Object> getVariables() {
+        return variables;
+    }
+    
+    /**
+     * Set the variables map containing all extracted values
+     */
+    public void setVariables(Map<String, Object> variables) {
+        this.variables = variables;
+    }
+    
+    /**
+     * Get a specific variable by name
+     */
+    public Object getVariable(String name) {
+        return variables.get(name);
+    }
+    
+    /**
+     * Set a specific variable
+     */
+    public void setVariable(String name, Object value) {
+        variables.put(name, value);
+    }
 
     @Override
     public String toString() {
@@ -134,6 +166,7 @@ public class TestResult {
                 ", passed=" + passed +
                 ", statusCode=" + statusCode +
                 ", executedSteps=" + executedSteps.size() +
+                ", variables=" + variables.size() +
                 ", executionTime=" + executionTime +
                 "}";
     }

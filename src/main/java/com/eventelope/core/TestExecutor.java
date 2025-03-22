@@ -1,6 +1,8 @@
 package com.eventelope.core;
 
 import com.eventelope.assertion.AssertionProcessor;
+import com.eventelope.context.TestContext;
+import com.eventelope.extraction.ResponseExtractor;
 import com.eventelope.http.RestClient;
 import com.eventelope.model.ApiRequest;
 import com.eventelope.model.ResponseVerifier;
@@ -20,10 +22,12 @@ public class TestExecutor {
     private static final Logger LOGGER = LoggerFactory.getLogger(TestExecutor.class);
     private final RestClient restClient;
     private final AssertionProcessor assertionProcessor;
+    private final ResponseExtractor responseExtractor;
 
     public TestExecutor() {
         this.restClient = new RestClient();
         this.assertionProcessor = new AssertionProcessor();
+        this.responseExtractor = new ResponseExtractor();
     }
 
     /**
@@ -38,11 +42,14 @@ public class TestExecutor {
         TestResult result = new TestResult(testCase);
         result.setPassed(true); // Assume passed until a failure occurs
         
+        // Create a test context for sharing variables between steps
+        TestContext testContext = new TestContext();
+        
         try {
             // Execute preconditions if they exist
             if (!testCase.getPreconditions().isEmpty()) {
                 LOGGER.info("Executing preconditions for test: {}", testCase.getName());
-                boolean preconditionsPass = executeSteps(testCase.getPreconditions(), result);
+                boolean preconditionsPass = executeSteps(testCase.getPreconditions(), result, testContext);
                 if (!preconditionsPass) {
                     LOGGER.error("Preconditions failed for test: {}", testCase.getName());
                     result.setPassed(false);
@@ -53,7 +60,7 @@ public class TestExecutor {
             // Execute setup steps if they exist
             if (!testCase.getSetup().isEmpty()) {
                 LOGGER.info("Executing setup for test: {}", testCase.getName());
-                boolean setupPass = executeSteps(testCase.getSetup(), result);
+                boolean setupPass = executeSteps(testCase.getSetup(), result, testContext);
                 if (!setupPass) {
                     LOGGER.error("Setup failed for test: {}", testCase.getName());
                     result.setPassed(false);
@@ -63,7 +70,7 @@ public class TestExecutor {
             
             // Execute main execution steps (mandatory)
             LOGGER.info("Executing main steps for test: {}", testCase.getName());
-            boolean executionPass = executeSteps(testCase.getExecution(), result);
+            boolean executionPass = executeSteps(testCase.getExecution(), result, testContext);
             if (!executionPass) {
                 LOGGER.error("Execution failed for test: {}", testCase.getName());
                 result.setPassed(false);
@@ -72,7 +79,7 @@ public class TestExecutor {
             // Execute cleanup steps if they exist (always run, even if previous steps failed)
             if (!testCase.getCleanup().isEmpty()) {
                 LOGGER.info("Executing cleanup for test: {}", testCase.getName());
-                boolean cleanupPass = executeSteps(testCase.getCleanup(), result);
+                boolean cleanupPass = executeSteps(testCase.getCleanup(), result, testContext);
                 if (!cleanupPass) {
                     LOGGER.warn("Cleanup had issues for test: {}", testCase.getName());
                     // Don't fail the test just because cleanup had issues
@@ -86,6 +93,9 @@ public class TestExecutor {
                     testCase.getName(), 
                     String.join(", ", result.getFailureMessages()));
             }
+            
+            // Store variables from test context in result for reporting
+            result.setVariables(testContext.getAllVariables());
             
         } catch (Exception e) {
             result.setPassed(false);
@@ -101,9 +111,10 @@ public class TestExecutor {
      *
      * @param steps List of steps to execute
      * @param result The test result to update
+     * @param context The test context for storing and retrieving variables
      * @return true if all steps passed, false otherwise
      */
-    private boolean executeSteps(List<Step> steps, TestResult result) {
+    private boolean executeSteps(List<Step> steps, TestResult result, TestContext context) {
         boolean allPassed = true;
         
         for (Step step : steps) {
@@ -119,31 +130,40 @@ public class TestExecutor {
                 // Apply default headers
                 request.applyDefaultHeaders();
                 
-                // Execute the request
-                Response response = restClient.executeRequest(request);
+                // Execute the request with the test context for variable substitution
+                Response response = restClient.executeRequest(request, context);
+                String responseBody = response.getBody().asString();
                 
                 // Store the most recent response in the result
                 result.setResponse(response);
-                result.setResponseBody(response.getBody().asString());
+                result.setResponseBody(responseBody);
                 result.setResponseHeaders(response.getHeaders().asList());
                 result.setStatusCode(response.getStatusCode());
                 
                 // Process assertions
                 ResponseVerifier verifier = step.getVerify();
                 if (verifier != null) {
-                    List<String> assertionFailures = assertionProcessor.verifyResponse(response, verifier);
+                    // First verify assertions with variable substitution via context
+                    List<String> assertionFailures = assertionProcessor.verifyResponse(response, verifier, context);
                     
-                    if (!assertionFailures.isEmpty()) {
+                    // If assertions pass, perform extractions
+                    if (assertionFailures.isEmpty()) {
+                        // Extract values from response and store them in the context
+                        if (verifier.getExtractions() != null && !verifier.getExtractions().isEmpty()) {
+                            LOGGER.debug("Performing extractions for step: {}", step.getName());
+                            responseExtractor.extractAndStoreValues(responseBody, verifier.getExtractions(), context);
+                        }
+                        
+                        LOGGER.info("Step '{}' passed", step.getName());
+                        // Track successfully executed steps
+                        result.addExecutedStep(step.getName());
+                    } else {
                         allPassed = false;
                         for (String failure : assertionFailures) {
                             result.addFailureMessage(String.format("Step '%s': %s", step.getName(), failure));
                         }
                         LOGGER.error("Step '{}' failed with {} assertion failures", 
                             step.getName(), assertionFailures.size());
-                    } else {
-                        LOGGER.info("Step '{}' passed", step.getName());
-                        // Track successfully executed steps
-                        result.addExecutedStep(step.getName());
                     }
                 } else {
                     LOGGER.warn("Step '{}' has no verification criteria defined", step.getName());

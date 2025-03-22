@@ -1,0 +1,81 @@
+test:
+  name: Variable Extraction Test
+  description: Tests the ability to extract values from responses and use them in subsequent requests
+
+  setup:
+    - step:
+        name: Get Existing User
+        request:
+          method: GET
+          url: https://jsonplaceholder.typicode.com/users/1
+        verify:
+          status: 200
+          jsonPathAssertions:
+            - path: $.id
+              type: exists
+            - path: $.name
+              type: exists
+          extractions:
+            - from: $.id
+              storeTo: userId
+            - from: $.name
+              storeTo: userName
+
+  execution:
+    - step:
+        name: Get User by ID
+        request:
+          method: GET
+          url: https://jsonplaceholder.typicode.com/users/${userId}
+        verify:
+          status: 200
+          jsonPathAssertions:
+            - path: $.id
+              type: equals
+              expected: ${userId}
+            - path: $.name
+              type: equals
+              expected: ${userName}
+
+    - step:
+        name: Create Post for User
+        request:
+          method: POST
+          url: https://jsonplaceholder.typicode.com/posts
+          headers:
+            Content-Type: application/json
+          payload: |
+            {
+              "userId": ${userId},
+              "title": "Post by ${userName}",
+              "body": "This is a test post created for user ${userName} with ID ${userId}"
+            }
+        verify:
+          status: 201
+          jsonPathAssertions:
+            - path: $.userId
+              type: equals
+              expected: ${userId}
+            - path: $.title
+              type: contains
+              expected: ${userName}
+          extractions:
+            - from: $.id
+              storeTo: postId
+
+  cleanup:
+    - step:
+        name: Delete Post
+        request:
+          method: DELETE
+          url: https://jsonplaceholder.typicode.com/posts/${postId}
+        verify:
+          status: 200
+
+    - step:
+        name: Delete User
+        request:
+          method: DELETE
+          url: https://jsonplaceholder.typicode.com/users/${userId}
+        verify:
+          status: 200

@@ -1,6 +1,7 @@
 package com.eventelope.http;
 
 import com.eventelope.auth.AuthenticationHandler;
+import com.eventelope.context.TestContext;
 import com.eventelope.model.ApiRequest;
 import io.restassured.RestAssured;
 import io.restassured.response.Response;
@@ -9,6 +10,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Handles HTTP requests using RestAssured.
@@ -27,7 +30,24 @@ public class RestClient {
      * @return The HTTP response
      */
     public Response executeRequest(ApiRequest request) {
-        String endpoint = processEndpoint(request.getEndpoint());
+        return executeRequest(request, null);
+    }
+    
+    /**
+     * Execute an HTTP request with variable substitution and return the response.
+     *
+     * @param request The API request to execute
+     * @param context The test context containing variables to substitute
+     * @return The HTTP response
+     */
+    public Response executeRequest(ApiRequest request, TestContext context) {
+        // Process endpoint with variable substitution if context is provided
+        String endpoint = request.getEndpoint();
+        if (context != null && endpoint != null) {
+            endpoint = replaceVariables(endpoint, context);
+        }
+        endpoint = processEndpoint(endpoint);
+        
         LOGGER.info("Executing {} request to {}", request.getMethod(), endpoint);
         
         RequestSpecification requestSpec = RestAssured.given()
@@ -57,8 +77,15 @@ public class RestClient {
                 requestSpec.header("Content-Type", "application/json");
             }
             
+            // Replace variables in payload if context is provided
+            String payload = request.getPayload();
+            if (context != null) {
+                payload = replaceVariables(payload, context);
+                LOGGER.debug("Payload after variable replacement: {}", payload);
+            }
+            
             // Add the payload as the request body
-            requestSpec.body(request.getPayload());
+            requestSpec.body(payload);
         }
         
         // Execute the request based on method
@@ -119,5 +146,41 @@ public class RestClient {
         
         // If it doesn't start with /, add a / and append to default base URL
         return DEFAULT_BASE_URL + "/" + endpoint;
+    }
+    
+    /**
+     * Replace variables in the format ${variableName} with their values from the context.
+     * 
+     * @param input String containing variables to replace
+     * @param context TestContext containing variable values
+     * @return String with variables replaced by their values
+     */
+    private String replaceVariables(String input, TestContext context) {
+        if (input == null || context == null) {
+            return input;
+        }
+        
+        // Pattern to match ${variable} syntax
+        Pattern pattern = Pattern.compile("\\$\\{([^}]+)\\}");
+        Matcher matcher = pattern.matcher(input);
+        
+        StringBuffer result = new StringBuffer();
+        while (matcher.find()) {
+            String variableName = matcher.group(1);
+            Object variableValue = context.getVariable(variableName);
+            
+            if (variableValue != null) {
+                // Replace the variable with its value from context
+                matcher.appendReplacement(result, variableValue.toString().replace("$", "\\$"));
+                LOGGER.debug("Replaced variable '{}' with value '{}'", variableName, variableValue);
+            } else {
+                LOGGER.warn("Variable '{}' not found in context, leaving as is", variableName);
+                // If variable not found, leave the placeholder as is
+                matcher.appendReplacement(result, "\\${" + variableName + "}");
+            }
+        }
+        matcher.appendTail(result);
+        
+        return result.toString();
     }
 }

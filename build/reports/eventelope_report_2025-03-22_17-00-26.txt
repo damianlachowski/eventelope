@@ -1,0 +1,28 @@
+Eventelope Test Execution Report
+==============================
+Generated at: 2025-03-22T17:00:26.177826203
+
+Summary:
+  Total Tests: 1
+  Passed: 0
+  Failed: 1
+  Success Rate: 0%
+
+Detailed Results:
+================
+
+1. Variable Extraction Test
+   Status: FAILED
+   Description: Tests the ability to extract values from responses and use them in subsequent requests
+   Executed Steps: 4
+     Steps:
+       - Create User
+       - Create Post for User
+       - Delete Post
+       - Delete User
+   Response Status: 200
+   Failure Reasons:
+     - Step 'Get User by ID': Status code assertion failed: expected 200 but got 404
+     - Step 'Get User by ID': JSONPath not found: '$.id'
+     - Step 'Get User by ID': JSONPath not found: '$.name'
+

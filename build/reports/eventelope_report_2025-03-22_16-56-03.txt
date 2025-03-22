@@ -1,0 +1,21 @@
+Eventelope Test Execution Report
+==============================
+Generated at: 2025-03-22T16:56:03.963411917
+
+Summary:
+  Total Tests: 1
+  Passed: 0
+  Failed: 1
+  Success Rate: 0%
+
+Detailed Results:
+================
+
+1. Variable Extraction Test
+   Status: FAILED
+   Description: Tests the ability to extract values from responses and use them in subsequent requests
+   Executed Steps: 0
+   Response Status: 0
+   Failure Reasons:
+     - Step 'Create User': Exception - Endpoint cannot be null or empty
+
