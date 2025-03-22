@@ -1,62 +1,73 @@
 test:
   name: Template Variables Test
-  description: Test the template variables functionality for advanced payload templating
+  description: Test the template variables functionality for advanced payload templating using external files
   
   setup:
     - name: Initialize test variables
       request:
         method: GET
         endpoint: /posts/1
+      verify:
+        statusCode: 200
+        jsonPathAssertions:
+          - path: $.id
+            type: exists
+        extractions:
+          - from: $.id
+            storeTo: postId
       
   execution:
-    - name: Create post with template variables
+    - name: Create post with template variables from external file
       request:
         method: POST
         endpoint: /posts
         headers:
           Content-Type: application/json
           X-User-Id: "{{userId}}"  # Using template variable in headers
-        payload: |
-          {
-            "title": "{{postTitle}}",
-            "body": "{{postBody}}",
-            "userId": 1
-          }
+        payload: file:src/test/resources/payloads/post_template.json
         templateVariables:
           - name: userId
             value: "12345"
           - name: postTitle
             value: "Template Test Post"
           - name: postBody
-            value: "This is a post created using template variables"
+            value: "This is a post created using template variables from an external file"
       verify:
-        - type: status
-          expected: 201
-        - type: jsonPath
-          path: $.title
-          expected: "Template Test Post"
-        - type: jsonPath
-          path: $.body
-          expected: "This is a post created using template variables"
+        statusCode: 201
+        jsonPathAssertions:
+          - path: $.title
+            expected: "Template Test Post"
+            type: equals
+          - path: $.body
+            expected: "This is a post created using template variables from an external file"
+            type: equals
+          - path: $.metadata.createdBy
+            expected: "12345"
+            type: equals
     
-    - name: Create another post with mixed variables
+    - name: Create another post with mixed variables from external file
       request:
         method: POST
         endpoint: /posts
         headers:
           Content-Type: application/json
-        payload: |
-          {
-            "title": "Post from ${postId}",
-            "body": "{{postBody}} with ${postId}",
-            "userId": 1
-          }
+        payload: file:src/test/resources/payloads/mixed_template.json
         templateVariables:
           - name: postBody
             value: "This is a mixed variable post"
+          - name: tag1
+            value: "template"
+          - name: tag2
+            value: "external"
       verify:
-        - type: status
-          expected: 201
+        statusCode: 201
+        jsonPathAssertions:
+          - path: $.tags[0]
+            expected: "template"
+            type: equals
+          - path: $.tags[1]
+            expected: "external"
+            type: equals
 
   cleanup:
     - name: Cleanup created posts

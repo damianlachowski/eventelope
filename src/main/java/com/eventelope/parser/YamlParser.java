@@ -269,11 +269,12 @@ public class YamlParser {
             if (templateVarsList != null) {
                 for (Map<String, String> varMap : templateVarsList) {
                     if (varMap.containsKey("name") && varMap.containsKey("value")) {
-                        com.eventelope.template.TemplateVariable templateVar = new com.eventelope.template.TemplateVariable();
-                        templateVar.setName(varMap.get("name"));
-                        templateVar.setValue(varMap.get("value"));
+                        String name = varMap.get("name");
+                        String value = varMap.get("value");
+                        com.eventelope.template.TemplateVariable templateVar = 
+                            new com.eventelope.template.TemplateVariable(name, value);
                         request.addTemplateVariable(templateVar);
-                        LOGGER.debug("Added template variable '{}' with value '{}'", varMap.get("name"), varMap.get("value"));
+                        LOGGER.debug("Added template variable '{}' with value '{}'", name, value);
                     } else {
                         LOGGER.warn("Invalid template variable definition (missing name or value): {}", varMap);
                     }

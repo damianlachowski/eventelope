@@ -1,0 +1,9 @@
+{
+  "title": "{{postTitle}}",
+  "body": "{{postBody}}",
+  "userId": 1,
+  "metadata": {
+    "createdBy": "{{userId}}",
+    "createdAt": "2025-03-22"
+  }
+}

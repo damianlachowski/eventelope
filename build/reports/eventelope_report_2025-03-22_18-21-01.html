@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+  <meta charset='UTF-8'>
+  <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+  <title>Eventelope Test Report</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; padding: 20px; color: #333; }
+    h1, h2 { color: #2c3e50; }
+    .summary { background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin-bottom: 20px; }
+    .test-case { background-color: #fff; border: 1px solid #ddd; border-radius: 5px; padding: 15px; margin-bottom: 15px; }
+    .test-case.passed { border-left: 5px solid #28a745; }
+    .test-case.failed { border-left: 5px solid #dc3545; }
+    .status { font-weight: bold; }
+    .status.passed { color: #28a745; }
+    .status.failed { color: #dc3545; }
+    .details { margin-top: 10px; }
+    .failure-reasons { background-color: #f8d7da; padding: 10px; border-radius: 5px; margin-top: 10px; }
+    .steps-list { background-color: #e9ecef; padding: 10px; border-radius: 5px; margin-top: 10px; }
+    .progress-bar { height: 20px; border-radius: 5px; overflow: hidden; background-color: #e9ecef; }
+    .progress-bar-inner { height: 100%; background-color: #28a745; width: 77%; }
+  </style>
+</head>
+<body>
+  <h1>Eventelope Test Execution Report</h1>
+  <p>Generated at: 2025-03-22T18:21:01.100825667</p>
+  <div class='summary'>
+    <h2>Summary</h2>
+    <p><strong>Total Tests:</strong> 9</p>
+    <p><strong>Passed:</strong> 7</p>
+    <p><strong>Failed:</strong> 2</p>
+    <p><strong>Success Rate:</strong> 77%</p>
+    <div class='progress-bar'><div class='progress-bar-inner'></div></div>
+  </div>
+  <h2>Detailed Results</h2>
+  <div class='test-case passed'>
+    <h3>1. Sample POST Test</h3>
+    <p><span class='status passed'>PASSED</span></p>
+    <div class='details'>
+      <p><strong>Description:</strong> Basic POST request validation</p>
+      <div class='steps-list'>
+        <p><strong>Executed Steps (2):</strong></p>
+        <ol>
+          <li>Verify API Health</li>
+          <li>Create Post</li>
+        </ol>
+      </div>
+      <p><strong>Response Status:</strong> 201</p>
+    </div>
+  </div>
+  <div class='test-case passed'>
+    <h3>2. Advanced Assertions Test</h3>
+    <p><span class='status passed'>PASSED</span></p>
+    <div class='details'>
+      <p><strong>Description:</strong> Demonstrates the use of advanced assertion types beyond simple equality</p>
+      <div class='steps-list'>
+        <p><strong>Executed Steps (2):</strong></p>
+        <ol>
+          <li>Verify API Health</li>
+          <li>Get User with Advanced Assertions</li>
+        </ol>
+      </div>
+      <p><strong>Response Status:</strong> 200</p>
+    </div>
+  </div>
+  <div class='test-case passed'>
+    <h3>3. Complex POST Test</h3>
+    <p><span class='status passed'>PASSED</span></p>
+    <div class='details'>
+      <p><strong>Description:</strong> Tests POST request with complex nested JSON payload</p>
+      <div class='steps-list'>
+        <p><strong>Executed Steps (2):</strong></p>
+        <ol>
+          <li>Verify API Health</li>
+          <li>Create Complex Post</li>
+        </ol>
+      </div>
+      <p><strong>Response Status:</strong> 201</p>
+    </div>
+  </div>
+  <div class='test-case passed'>
+    <h3>4. Sample GET API Test</h3>
+    <p><span class='status passed'>PASSED</span></p>
+    <div class='details'>
+      <p><strong>Description:</strong> Tests a simple GET request to retrieve user information</p>
+      <div class='steps-list'>
+        <p><strong>Executed Steps (2):</strong></p>
+        <ol>
+          <li>Verify API Health</li>
+          <li>Get User Details</li>
+        </ol>
+      </div>
+      <p><strong>Response Status:</strong> 200</p>
+    </div>
+  </div>
+  <div class='test-case passed'>
+    <h3>5. Complex Workflow Test</h3>
+    <p><span class='status passed'>PASSED</span></p>
+    <div class='details'>
+      <p><strong>Description:</strong> Demonstrates a multi-step workflow with setup and cleanup</p>
+      <div class='steps-list'>
+        <p><strong>Executed Steps (7):</strong></p>
+        <ol>
+          <li>Verify API Health</li>
+          <li>Create Test User</li>
+          <li>Create Post</li>
+          <li>Add Comment</li>
+          <li>Verify Post Details</li>
+          <li>Delete Post</li>
+          <li>Delete User</li>
+        </ol>
+      </div>
+      <p><strong>Response Status:</strong> 200</p>
+    </div>
+  </div>
+  <div class='test-case failed'>
+    <h3>6. Variable Extraction Test</h3>
+    <p><span class='status failed'>FAILED</span></p>
+    <div class='details'>
+      <p><strong>Description:</strong> Tests the ability to extract values from responses and use them in subsequent requests</p>
+      <div class='steps-list'>
+        <p><strong>Executed Steps (1):</strong></p>
+        <ol>
+          <li>Get Existing User</li>
+        </ol>
+      </div>
+      <p><strong>Response Status:</strong> 500</p>
+      <div class='failure-reasons'>
+        <p><strong>Failure Reasons:</strong></p>
+        <ul>
+          <li>Step 'Get User by ID': Exception - Invalid number of path parameters. Expected 1, was 0. Undefined path parameters are: userId.</li>
+          <li>Step 'Create Post for User': Status code assertion failed: expected 201 but got 500</li>
+          <li>Step 'Create Post for User': JSONPath not found: '$.userId'</li>
+          <li>Step 'Create Post for User': JSONPath not found: '$.title'</li>
+          <li>Step 'Delete Post': Exception - Invalid number of path parameters. Expected 1, was 0. Undefined path parameters are: postId.</li>
+          <li>Step 'Delete User': Exception - Invalid number of path parameters. Expected 1, was 0. Undefined path parameters are: userId.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class='test-case passed'>
+    <h3>7. Conditional Steps Test</h3>
+    <p><span class='status passed'>PASSED</span></p>
+    <div class='details'>
+      <p><strong>Description:</strong> Demonstrates conditional execution of steps based on previous response values</p>
+      <div class='steps-list'>
+        <p><strong>Executed Steps (4):</strong></p>
+        <ol>
+          <li>Get First User</li>
+          <li>Execute Only If User ID is 1 (conditionally skipped)</li>
+          <li>Skip This Step (User ID Not 10) (conditionally skipped)</li>
+          <li>Execute If Username Contains Leanne (conditionally skipped)</li>
+        </ol>
+      </div>
+      <p><strong>Response Status:</strong> 200</p>
+    </div>
+  </div>
+  <div class='test-case failed'>
+    <h3>8. Retry and Timeout Test</h3>
+    <p><span class='status failed'>FAILED</span></p>
+    <div class='details'>
+      <p><strong>Description:</strong> Demonstrates the retry functionality and timeout settings for handling eventual consistency between services</p>
+      <div class='steps-list'>
+        <p><strong>Executed Steps (1):</strong></p>
+        <ol>
+          <li>Get First Post</li>
+        </ol>
+      </div>
+      <p><strong>Response Status:</strong> 200</p>
+      <div class='failure-reasons'>
+        <p><strong>Failure Reasons:</strong></p>
+        <ul>
+          <li>Step 'Step with Retry Configuration': Exception - Invalid number of path parameters. Expected 1, was 0. Undefined path parameters are: postId. (after 3 retries)</li>
+          <li>Step 'Intentionally Failing Step with Retries': Exception - Invalid number of path parameters. Expected 1, was 0. Undefined path parameters are: postId. (after 2 retries)</li>
+          <li>Step 'Step with Specific Timeouts': Exception - Invalid number of path parameters. Expected 1, was 0. Undefined path parameters are: postId.</li>
+          <li>Step 'Cleanup Step': Exception - Invalid number of path parameters. Expected 1, was 0. Undefined path parameters are: postId.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class='test-case passed'>
+    <h3>9. Template Variables Test</h3>
+    <p><span class='status passed'>PASSED</span></p>
+    <div class='details'>
+      <p><strong>Description:</strong> Test the template variables functionality for advanced payload templating using external files</p>
+      <div class='steps-list'>
+        <p><strong>Executed Steps (0):</strong></p>
+        <p>No steps were executed successfully.</p>
+      </div>
+      <p><strong>Response Status:</strong> 0</p>
+    </div>
+  </div>
+</body>
+</html>
