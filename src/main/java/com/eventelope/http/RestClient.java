@@ -144,6 +144,9 @@ public class RestClient {
         // Execute the request based on method
         Response response;
         try {
+            // Log the final endpoint after all replacements and path parameter settings
+            LOGGER.debug("Final endpoint for REST request: {}", endpoint);
+            
             switch (request.getMethod()) {
                 case "GET":
                     response = requestSpec.get(endpoint);
