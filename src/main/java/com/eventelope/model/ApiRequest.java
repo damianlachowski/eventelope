@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Represents an API request with HTTP method, endpoint, headers, and payload.
+ * Represents an API request with HTTP method, endpoint, headers, payload, and timeout settings.
  */
 public class ApiRequest {
     private String method;
@@ -12,8 +12,12 @@ public class ApiRequest {
     private Map<String, String> headers = new HashMap<>();
     private String payload; // Raw JSON string payload
     private String user; // Reference to a user in the users.yaml config
+    private Integer timeout; // Socket timeout in milliseconds
+    private Integer connectionTimeout; // Connection timeout in milliseconds
 
     public ApiRequest() {
+        this.timeout = 0; // Use default timeout from RestClient
+        this.connectionTimeout = 0; // Use default connectionTimeout from RestClient
     }
 
     public String getMethod() {
@@ -79,15 +83,64 @@ public class ApiRequest {
     public void setUser(String user) {
         this.user = user;
     }
+    
+    /**
+     * Get the socket timeout in milliseconds.
+     * 
+     * @return The socket timeout in milliseconds, or 0 if not set (which means use the default)
+     */
+    public Integer getTimeout() {
+        return timeout;
+    }
+
+    /**
+     * Set the socket timeout in milliseconds.
+     * 
+     * @param timeout The socket timeout in milliseconds
+     */
+    public void setTimeout(Integer timeout) {
+        this.timeout = timeout != null ? timeout : 0;
+    }
+
+    /**
+     * Get the connection timeout in milliseconds.
+     * 
+     * @return The connection timeout in milliseconds, or 0 if not set (which means use the default)
+     */
+    public Integer getConnectionTimeout() {
+        return connectionTimeout;
+    }
+
+    /**
+     * Set the connection timeout in milliseconds.
+     * 
+     * @param connectionTimeout The connection timeout in milliseconds
+     */
+    public void setConnectionTimeout(Integer connectionTimeout) {
+        this.connectionTimeout = connectionTimeout != null ? connectionTimeout : 0;
+    }
 
     @Override
     public String toString() {
-        return "ApiRequest{" +
-                "method='" + method + '\'' +
-                ", endpoint='" + endpoint + '\'' +
-                ", headers=" + headers +
-                ", hasPayload=" + (payload != null) +
-                ", user='" + user + '\'' +
-                '}';
+        StringBuilder sb = new StringBuilder("ApiRequest{");
+        sb.append("method='").append(method).append('\'');
+        sb.append(", endpoint='").append(endpoint).append('\'');
+        sb.append(", headers=").append(headers);
+        sb.append(", hasPayload=").append(payload != null);
+        
+        if (user != null) {
+            sb.append(", user='").append(user).append('\'');
+        }
+        
+        if (timeout > 0) {
+            sb.append(", timeout=").append(timeout).append("ms");
+        }
+        
+        if (connectionTimeout > 0) {
+            sb.append(", connectionTimeout=").append(connectionTimeout).append("ms");
+        }
+        
+        sb.append('}');
+        return sb.toString();
     }
 }

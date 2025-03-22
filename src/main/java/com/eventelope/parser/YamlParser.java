@@ -124,6 +124,34 @@ public class YamlParser {
             Step step = new Step();
             step.setName((String) stepMap.get("name"));
             
+            // Parse condition if present
+            if (stepMap.containsKey("condition")) {
+                String condition = (String) stepMap.get("condition");
+                step.setCondition(condition);
+                LOGGER.debug("Added condition '{}' to step '{}'", condition, step.getName());
+            }
+            
+            // Parse retry configuration if present
+            if (stepMap.containsKey("retries")) {
+                Integer retries = ((Number) stepMap.get("retries")).intValue();
+                step.setRetries(retries);
+                LOGGER.debug("Added {} retries to step '{}'", retries, step.getName());
+            }
+            
+            // Parse retry interval if present
+            if (stepMap.containsKey("retryInterval")) {
+                Long retryInterval = ((Number) stepMap.get("retryInterval")).longValue();
+                step.setRetryInterval(retryInterval);
+                LOGGER.debug("Added retry interval of {}ms to step '{}'", retryInterval, step.getName());
+            }
+            
+            // Parse service if present
+            if (stepMap.containsKey("service")) {
+                String service = (String) stepMap.get("service");
+                step.setService(service);
+                LOGGER.debug("Added service '{}' to step '{}'", service, step.getName());
+            }
+            
             // Parse request
             if (stepMap.containsKey("request")) {
                 Map<String, Object> requestMap = (Map<String, Object>) stepMap.get("request");
@@ -201,6 +229,38 @@ public class YamlParser {
         // Parse authentication/user if it exists
         if (requestMap.containsKey("user")) {
             request.setUser((String) requestMap.get("user"));
+        }
+        
+        // Parse timeout settings if they exist
+        if (requestMap.containsKey("timeout")) {
+            Object timeoutValue = requestMap.get("timeout");
+            if (timeoutValue instanceof Integer) {
+                request.setTimeout((Integer) timeoutValue);
+                LOGGER.debug("Set request timeout to {}ms", request.getTimeout());
+            } else if (timeoutValue instanceof String) {
+                try {
+                    request.setTimeout(Integer.parseInt((String) timeoutValue));
+                    LOGGER.debug("Set request timeout to {}ms", request.getTimeout());
+                } catch (NumberFormatException e) {
+                    LOGGER.warn("Invalid timeout value: {}, using default", timeoutValue);
+                }
+            }
+        }
+        
+        // Parse connection timeout settings if they exist
+        if (requestMap.containsKey("connectionTimeout")) {
+            Object timeoutValue = requestMap.get("connectionTimeout");
+            if (timeoutValue instanceof Integer) {
+                request.setConnectionTimeout((Integer) timeoutValue);
+                LOGGER.debug("Set connection timeout to {}ms", request.getConnectionTimeout());
+            } else if (timeoutValue instanceof String) {
+                try {
+                    request.setConnectionTimeout(Integer.parseInt((String) timeoutValue));
+                    LOGGER.debug("Set connection timeout to {}ms", request.getConnectionTimeout());
+                } catch (NumberFormatException e) {
+                    LOGGER.warn("Invalid connection timeout value: {}, using default", timeoutValue);
+                }
+            }
         }
         
         return request;

@@ -1,6 +1,7 @@
 package com.eventelope.core;
 
 import com.eventelope.assertion.AssertionProcessor;
+import com.eventelope.condition.ConditionEvaluator;
 import com.eventelope.context.TestContext;
 import com.eventelope.extraction.ResponseExtractor;
 import com.eventelope.http.RestClient;
@@ -23,11 +24,13 @@ public class TestExecutor {
     private final RestClient restClient;
     private final AssertionProcessor assertionProcessor;
     private final ResponseExtractor responseExtractor;
+    private final ConditionEvaluator conditionEvaluator;
 
     public TestExecutor() {
         this.restClient = new RestClient();
         this.assertionProcessor = new AssertionProcessor();
         this.responseExtractor = new ResponseExtractor();
+        this.conditionEvaluator = new ConditionEvaluator();
     }
 
     /**
@@ -118,6 +121,20 @@ public class TestExecutor {
         boolean allPassed = true;
         
         for (Step step : steps) {
+            // Check if the step has a condition that needs to be evaluated
+            if (step.hasCondition()) {
+                boolean conditionResult = conditionEvaluator.evaluateCondition(step.getCondition(), context);
+                if (!conditionResult) {
+                    LOGGER.info("Skipping step '{}' as condition '{}' evaluated to false", 
+                        step.getName(), step.getCondition());
+                    // Add to executed steps but mark as conditionally skipped
+                    result.addExecutedStep(step.getName() + " (conditionally skipped)");
+                    continue;
+                }
+                LOGGER.debug("Condition '{}' evaluated to true, executing step '{}'", 
+                    step.getCondition(), step.getName());
+            }
+            
             LOGGER.info("Executing step: {}", step.getName());
             
             try {
@@ -130,52 +147,129 @@ public class TestExecutor {
                 // Apply default headers
                 request.applyDefaultHeaders();
                 
-                // Execute the request with the test context for variable substitution
-                Response response = restClient.executeRequest(request, context);
-                String responseBody = response.getBody().asString();
+                // Check if retries are configured for this step
+                boolean stepPassed = false;
+                int retryCount = 0;
+                int maxRetries = step.getRetries();
+                long retryInterval = step.getRetryInterval();
+                List<String> assertionFailures = new ArrayList<>();
+                Response response = null;
+                String responseBody = "";
                 
-                // Store the most recent response in the result
-                result.setResponse(response);
-                result.setResponseBody(responseBody);
-                result.setResponseHeaders(response.getHeaders().asList());
-                result.setStatusCode(response.getStatusCode());
-                
-                // Process assertions
-                ResponseVerifier verifier = step.getVerify();
-                if (verifier != null) {
-                    // First verify assertions with variable substitution via context
-                    List<String> assertionFailures = assertionProcessor.verifyResponse(response, verifier, context);
-                    
-                    // If assertions pass, perform extractions
-                    if (assertionFailures.isEmpty()) {
-                        // Extract values from response and store them in the context
-                        if (verifier.getExtractions() != null && !verifier.getExtractions().isEmpty()) {
-                            LOGGER.debug("Performing extractions for step: {}", step.getName());
-                            responseExtractor.extractAndStoreValues(responseBody, verifier.getExtractions(), context);
-                        }
+                // Execute with retry logic if configured
+                do {
+                    // If this is a retry, log it and sleep for the retry interval
+                    if (retryCount > 0) {
+                        LOGGER.info("Retrying step '{}' (attempt {}/{})", 
+                            step.getName(), retryCount, maxRetries);
                         
-                        LOGGER.info("Step '{}' passed", step.getName());
-                        // Track successfully executed steps
-                        result.addExecutedStep(step.getName());
-                    } else {
-                        allPassed = false;
-                        for (String failure : assertionFailures) {
-                            result.addFailureMessage(String.format("Step '%s': %s", step.getName(), failure));
+                        if (retryInterval > 0) {
+                            LOGGER.debug("Waiting {}ms before retry", retryInterval);
+                            try {
+                                Thread.sleep(retryInterval);
+                            } catch (InterruptedException ie) {
+                                Thread.currentThread().interrupt();
+                                LOGGER.warn("Retry wait interrupted", ie);
+                            }
                         }
-                        LOGGER.error("Step '{}' failed with {} assertion failures", 
-                            step.getName(), assertionFailures.size());
                     }
+                    
+                    try {
+                        // Execute the request with the test context for variable substitution
+                        response = restClient.executeRequest(request, context);
+                        responseBody = response.getBody().asString();
+                        
+                        // Store the most recent response in the result
+                        result.setResponse(response);
+                        result.setResponseBody(responseBody);
+                        result.setResponseHeaders(response.getHeaders().asList());
+                        result.setStatusCode(response.getStatusCode());
+                        
+                        // Process assertions
+                        ResponseVerifier verifier = step.getVerify();
+                        if (verifier != null) {
+                            // Verify assertions with variable substitution via context
+                            assertionFailures = assertionProcessor.verifyResponse(response, verifier, context);
+                            
+                            // If assertions pass, mark as successful and break the retry loop
+                            if (assertionFailures.isEmpty()) {
+                                stepPassed = true;
+                                break;
+                            } else if (retryCount < maxRetries) {
+                                LOGGER.debug("Step '{}' failed assertions on attempt {}, will retry", 
+                                    step.getName(), retryCount + 1);
+                            }
+                        } else {
+                            // No verification criteria means the step passes automatically
+                            LOGGER.warn("Step '{}' has no verification criteria defined", step.getName());
+                            stepPassed = true;
+                            break;
+                        }
+                    } catch (Exception e) {
+                        if (retryCount < maxRetries) {
+                            LOGGER.debug("Step '{}' failed with exception on attempt {}, will retry: {}", 
+                                step.getName(), retryCount + 1, e.getMessage());
+                        } else {
+                            throw e; // Rethrow the exception on the last attempt
+                        }
+                    }
+                    
+                    retryCount++;
+                } while (retryCount <= maxRetries && !stepPassed);
+                
+                // After all retries, process the final result
+                if (stepPassed) {
+                    ResponseVerifier verifier = step.getVerify();
+                    // Extract values from response if there are extractions defined
+                    if (verifier != null && verifier.getExtractions() != null && !verifier.getExtractions().isEmpty()) {
+                        LOGGER.debug("Performing extractions for step: {}", step.getName());
+                        responseExtractor.extractAndStoreValues(responseBody, verifier.getExtractions(), context);
+                    }
+                    
+                    String stepInfo = step.getName();
+                    if (retryCount > 0) {
+                        stepInfo += String.format(" (after %d %s)", 
+                            retryCount, retryCount == 1 ? "retry" : "retries");
+                    }
+                    
+                    LOGGER.info("Step '{}' passed", stepInfo);
+                    // Track successfully executed steps
+                    result.addExecutedStep(stepInfo);
                 } else {
-                    LOGGER.warn("Step '{}' has no verification criteria defined", step.getName());
-                    // Still track steps that were executed without verification
-                    result.addExecutedStep(step.getName() + " (no verification)");
+                    // Step failed after all retries
+                    allPassed = false;
+                    String retryInfo = "";
+                    if (maxRetries > 0) {
+                        retryInfo = String.format(" after %d %s", 
+                            maxRetries, maxRetries == 1 ? "retry" : "retries");
+                    }
+                    
+                    if (!assertionFailures.isEmpty()) {
+                        for (String failure : assertionFailures) {
+                            result.addFailureMessage(String.format("Step '%s': %s%s", 
+                                step.getName(), failure, retryInfo));
+                        }
+                        LOGGER.error("Step '{}' failed with {} assertion failures{}", 
+                            step.getName(), assertionFailures.size(), retryInfo);
+                    } else {
+                        // This case would be hit if there was an exception on every retry
+                        result.addFailureMessage(String.format("Step '%s': Failed%s", 
+                            step.getName(), retryInfo));
+                        LOGGER.error("Step '{}' failed{}", step.getName(), retryInfo);
+                    }
                 }
                 
             } catch (Exception e) {
                 allPassed = false;
-                result.addFailureMessage(String.format("Step '%s': Exception - %s", 
-                    step.getName(), e.getMessage()));
-                LOGGER.error("Error executing step: " + step.getName(), e);
+                String retryInfo = "";
+                if (step.hasRetryConfig()) {
+                    retryInfo = String.format(" (after %d %s)", 
+                        step.getRetries(), step.getRetries() == 1 ? "retry" : "retries");
+                }
+                
+                result.addFailureMessage(String.format("Step '%s': Exception - %s%s", 
+                    step.getName(), e.getMessage(), retryInfo));
+                LOGGER.error("Error executing step: " + step.getName() + retryInfo, e);
             }
         }
         

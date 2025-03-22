@@ -1,0 +1,77 @@
+test:
+  name: Retry and Timeout Test
+  description: Demonstrates the retry functionality and timeout settings for handling eventual consistency between services
+
+  setup:
+    - step:
+        name: Get First Post
+        request:
+          method: GET
+          url: https://jsonplaceholder.typicode.com/posts/1
+        verify:
+          status: 200
+          jsonPathAssertions:
+            - path: $.id
+              type: equals
+              expected: 1
+          extractions:
+            - from: $.id
+              storeTo: postId
+
+  execution:
+    - step:
+        name: Step with Retry Configuration
+        service: orderService
+        retries: 3
+        retryInterval: 1000
+        request:
+          method: GET
+          url: https://jsonplaceholder.typicode.com/posts/${postId}
+          # Setting a custom timeout for this request (3 seconds)
+          timeout: 3000
+        verify:
+          status: 200
+          jsonPathAssertions:
+            - path: $.id
+              type: equals
+              expected: ${postId}
+              
+    - step:
+        name: Intentionally Failing Step with Retries
+        retries: 2
+        retryInterval: 500
+        request:
+          method: GET
+          # This URL will return 404, causing the step to retry
+          url: https://jsonplaceholder.typicode.com/nonexistent/${postId}
+          # Setting a custom connection timeout (1 second)
+          connectionTimeout: 1000
+          # Setting a custom request timeout (2 seconds)
+          timeout: 2000
+        verify:
+          # This will fail even with retries
+          status: 200
+          
+    - step:
+        name: Step with Specific Timeouts
+        request:
+          method: GET
+          url: https://jsonplaceholder.typicode.com/posts/${postId}
+          # Setting different timeout values
+          connectionTimeout: 2000  # 2 seconds for connection
+          timeout: 5000            # 5 seconds for response
+        verify:
+          status: 200
+          jsonPathAssertions:
+            - path: $.id
+              type: equals
+              expected: ${postId}
+          
+  cleanup:
+    - step:
+        name: Cleanup Step
+        request:
+          method: DELETE
+          url: https://jsonplaceholder.typicode.com/posts/${postId}
+        verify:
+          status: 200

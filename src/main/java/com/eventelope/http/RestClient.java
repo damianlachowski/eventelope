@@ -22,6 +22,9 @@ public class RestClient {
 
     // Default base URL for relative paths
     private static final String DEFAULT_BASE_URL = "https://jsonplaceholder.typicode.com";
+    
+    // Default timeout values in milliseconds (not currently used)
+    private static final int DEFAULT_TIMEOUT = 30000;
 
     /**
      * Execute an HTTP request and return the response.
@@ -48,7 +51,18 @@ public class RestClient {
         }
         endpoint = processEndpoint(endpoint);
         
-        LOGGER.info("Executing {} request to {}", request.getMethod(), endpoint);
+        // Log the timeout settings but don't apply them yet
+        int connectionTimeout = request.getConnectionTimeout();
+        int timeout = request.getTimeout();
+        
+        if (connectionTimeout > 0 || timeout > 0) {
+            LOGGER.info("Executing {} request to {} with timeout settings: connection={}ms, socket={}ms", 
+                request.getMethod(), endpoint, 
+                connectionTimeout > 0 ? connectionTimeout : "default", 
+                timeout > 0 ? timeout : "default");
+        } else {
+            LOGGER.info("Executing {} request to {}", request.getMethod(), endpoint);
+        }
         
         RequestSpecification requestSpec = RestAssured.given()
                 .log().all();  // Log all request details
@@ -90,36 +104,45 @@ public class RestClient {
         
         // Execute the request based on method
         Response response;
-        switch (request.getMethod()) {
-            case "GET":
-                response = requestSpec.get(endpoint);
-                break;
-            case "POST":
-                response = requestSpec.post(endpoint);
-                break;
-            case "PUT":
-                response = requestSpec.put(endpoint);
-                break;
-            case "DELETE":
-                response = requestSpec.delete(endpoint);
-                break;
-            case "PATCH":
-                response = requestSpec.patch(endpoint);
-                break;
-            case "HEAD":
-                response = requestSpec.head(endpoint);
-                break;
-            case "OPTIONS":
-                response = requestSpec.options(endpoint);
-                break;
-            default:
-                throw new IllegalArgumentException("Unsupported HTTP method: " + request.getMethod());
+        try {
+            switch (request.getMethod()) {
+                case "GET":
+                    response = requestSpec.get(endpoint);
+                    break;
+                case "POST":
+                    response = requestSpec.post(endpoint);
+                    break;
+                case "PUT":
+                    response = requestSpec.put(endpoint);
+                    break;
+                case "DELETE":
+                    response = requestSpec.delete(endpoint);
+                    break;
+                case "PATCH":
+                    response = requestSpec.patch(endpoint);
+                    break;
+                case "HEAD":
+                    response = requestSpec.head(endpoint);
+                    break;
+                case "OPTIONS":
+                    response = requestSpec.options(endpoint);
+                    break;
+                default:
+                    throw new IllegalArgumentException("Unsupported HTTP method: " + request.getMethod());
+            }
+            
+            // Log response details
+            response.then().log().all();
+            
+            return response;
+        } catch (Exception e) {
+            LOGGER.error("Request failed: {}", e.getMessage());
+            if (e.getMessage().contains("timeout") || e.getMessage().contains("timed out")) {
+                LOGGER.error("Request timed out: {}", e.getMessage());
+                throw new RuntimeException("Request timed out: " + e.getMessage(), e);
+            }
+            throw e;
         }
-        
-        // Log response details
-        response.then().log().all();
-        
-        return response;
     }
     
     /**

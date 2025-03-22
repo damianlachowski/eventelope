@@ -1,0 +1,68 @@
+test:
+  name: Conditional Steps Test
+  description: Demonstrates conditional execution of steps based on previous response values
+
+  setup:
+    - step:
+        name: Get First User
+        request:
+          method: GET
+          url: https://jsonplaceholder.typicode.com/users/1
+        verify:
+          status: 200
+          jsonPathAssertions:
+            - path: $.id
+              type: exists
+          extractions:
+            - from: $.id
+              storeTo: userId
+            - from: $.name
+              storeTo: userName
+
+  execution:
+    - step:
+        name: Execute Only If User ID is 1
+        condition: ${userId} == 1
+        request:
+          method: GET
+          url: https://jsonplaceholder.typicode.com/posts?userId=${userId}
+        verify:
+          status: 200
+          jsonPathAssertions:
+            - path: $[0].userId
+              type: equals
+              expected: 1
+          extractions:
+            - from: $[0].id
+              storeTo: postId
+
+    - step:
+        name: Skip This Step (User ID Not 10)
+        condition: ${userId} == 10
+        request:
+          method: GET
+          url: https://jsonplaceholder.typicode.com/posts?userId=10
+        verify:
+          status: 200
+          
+    - step:
+        name: Execute If Username Contains Leanne
+        condition: ${userName} contains 'Leanne'
+        request:
+          method: GET
+          url: https://jsonplaceholder.typicode.com/posts/${postId}
+        verify:
+          status: 200
+          jsonPathAssertions:
+            - path: $.id
+              type: equals
+              expected: ${postId}
+
+  cleanup:
+    - step:
+        name: Always Execute Cleanup
+        request:
+          method: DELETE
+          url: https://jsonplaceholder.typicode.com/posts/${postId}
+        verify:
+          status: 200
