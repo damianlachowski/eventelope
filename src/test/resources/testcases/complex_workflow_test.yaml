@@ -1,0 +1,92 @@
+
+test:
+  name: "Complex Workflow Test"
+  description: "Demonstrates a multi-step workflow with setup and cleanup"
+
+  preconditions:
+    - step:
+        name: "Verify API Health"
+        request:
+          method: GET
+          endpoint: https://jsonplaceholder.typicode.com/posts/1
+        verify:
+          statusCode: 200
+
+  setup:
+    - step:
+        name: "Create Test User"
+        request:
+          method: POST
+          endpoint: https://jsonplaceholder.typicode.com/users
+          payload: file:../payloads/create_user_payload.json
+        verify:
+          statusCode: 201
+          jsonPathAssertions:
+            - path: $.id
+              type: exists
+            - path: $.name
+              value: Test User
+              type: equals
+
+  execution:
+    - step:
+        name: "Create Post"
+        request:
+          method: POST
+          endpoint: https://jsonplaceholder.typicode.com/posts
+          payload: file:../payloads/create_post_payload.json
+        verify:
+          statusCode: 201
+          jsonPathAssertions:
+            - path: $.id
+              type: exists
+            - path: $.title
+              value: Test Post
+              type: equals
+
+    - step:
+        name: "Add Comment"
+        request:
+          method: POST
+          endpoint: https://jsonplaceholder.typicode.com/posts/1/comments
+          payload: file:../payloads/create_comment_payload.json
+        verify:
+          statusCode: 201
+          jsonPathAssertions:
+            - path: $.id
+              type: exists
+            - path: $.body
+              value: This is a test comment
+              type: equals
+
+    - step:
+        name: "Verify Post Details"
+        request:
+          method: GET
+          endpoint: https://jsonplaceholder.typicode.com/posts/1
+        verify:
+          statusCode: 200
+          jsonPathAssertions:
+            - path: $.title
+              type: exists
+            - path: $.body
+              type: exists
+            - path: $.userId
+              type: exists
+
+  cleanup:
+    - step:
+        name: "Delete Post"
+        request:
+          method: DELETE
+          endpoint: https://jsonplaceholder.typicode.com/posts/1
+        verify:
+          statusCode: 200
+
+    - step:
+        name: "Delete User"
+        request:
+          method: DELETE
+          endpoint: https://jsonplaceholder.typicode.com/users/1
+        verify:
+          statusCode: 200
