@@ -1,16 +1,32 @@
-testName: Sample GET API Test
-description: Tests a simple GET request to retrieve user information
 
-request:
-  method: GET
-  endpoint: https://jsonplaceholder.typicode.com/users/1
+test:
+  name: "Sample GET API Test"
+  description: "Tests a simple GET request to retrieve user information"
 
-verifier:
-  statusCode: 200
-  jsonPathAssertions:
-    - path: $.id
-      value: 1
-    - path: $.name
-      value: Leanne Graham
-    - path: $.email
-      value: Sincere@april.biz
+  preconditions:
+    - step:
+        name: "Verify API Health"
+        request:
+          method: GET 
+          endpoint: /health
+        verify:
+          status: 200
+
+  execution:
+    - step:
+        name: "Get User Details"
+        request:
+          method: GET
+          endpoint: https://jsonplaceholder.typicode.com/users/1
+        verify:
+          statusCode: 200
+          jsonPathAssertions:
+            - path: $.id
+              value: 1
+              type: equals
+            - path: $.name  
+              value: Leanne Graham
+              type: equals
+            - path: $.email
+              value: Sincere@april.biz
+              type: equals

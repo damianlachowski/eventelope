@@ -1,17 +1,33 @@
-testName: Complex POST Test
-description: Tests POST request with complex nested JSON payload
 
-request:
-  method: POST
-  endpoint: https://jsonplaceholder.typicode.com/posts  
-  payload: file:../payloads/complex_post_payload.json
+test:
+  name: "Complex POST Test"
+  description: "Tests POST request with complex nested JSON payload"
 
-verifier:
-  statusCode: 201
-  jsonPathAssertions:
-    - path: $.title
-      value: Complex Test
-    - path: $.metadata.tags[1]
-      value: json
-    - path: $.metadata.nestingTest.level1.level2.level3
-      value: deep nesting
+  preconditions:
+    - step:
+        name: "Verify API Health"
+        request:
+          method: GET
+          endpoint: /health
+        verify:
+          status: 200
+
+  execution:
+    - step:
+        name: "Create Complex Post"
+        request:
+          method: POST
+          endpoint: https://jsonplaceholder.typicode.com/posts
+          payload: file:../payloads/complex_post_payload.json
+        verify:
+          statusCode: 201
+          jsonPathAssertions:
+            - path: $.title
+              value: Complex Test
+              type: equals
+            - path: $.metadata.tags[1]
+              value: json
+              type: equals
+            - path: $.metadata.nestingTest.level1.level2.level3
+              value: deep nesting
+              type: equals

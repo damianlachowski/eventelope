@@ -1,18 +1,33 @@
 
-testName: Sample POST Test
-description: Basic POST request validation
+test:
+  name: "Sample POST Test"
+  description: "Basic POST request validation"
 
-request:
-  method: POST
-  endpoint: https://jsonplaceholder.typicode.com/posts  
-  payload: file:../payloads/sample_post_payload.json
+  preconditions:
+    - step:
+        name: "Verify API Health"
+        request:
+          method: GET
+          endpoint: /health
+        verify:
+          status: 200
 
-verifier:
-  statusCode: 201
-  jsonPathAssertions:
-    - path: $.title
-      value: Eventelope Test
-    - path: $.body
-      value: This is a test post created by Eventelope framework
-    - path: $.userId
-      value: 1
+  execution:
+    - step:
+        name: "Create Post"
+        request:
+          method: POST
+          endpoint: https://jsonplaceholder.typicode.com/posts
+          payload: file:../payloads/sample_post_payload.json
+        verify:
+          statusCode: 201
+          jsonPathAssertions:
+            - path: $.title
+              value: Eventelope Test
+              type: equals
+            - path: $.body
+              value: This is a test post created by Eventelope framework
+              type: equals
+            - path: $.userId
+              value: 1
+              type: equals
