@@ -27,6 +27,14 @@ verifier:
       expected: ".*@.*\\..*"
       type: matches
       
+    # Existence check
+    - path: $.company
+      type: exists
+
+    # Not empty check
+    - path: $.phone
+      type: isNotEmpty
+      
     # Numeric comparison with negative numbers
     # The API returns "-37.3159" as a string, but our numeric comparison
     # should correctly convert it to a number before comparison
@@ -35,10 +43,3 @@ verifier:
       expected: -30
       type: lessThan
       
-    # Existence check
-    - path: $.company
-      type: exists
-      
-    # Not empty check
-    - path: $.phone
-      type: isNotEmpty
