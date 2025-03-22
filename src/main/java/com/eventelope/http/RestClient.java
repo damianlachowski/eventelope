@@ -17,6 +17,9 @@ public class RestClient {
     private static final Logger LOGGER = LoggerFactory.getLogger(RestClient.class);
     private final AuthenticationHandler authHandler = new AuthenticationHandler();
 
+    // Default base URL for relative paths
+    private static final String DEFAULT_BASE_URL = "https://jsonplaceholder.typicode.com";
+
     /**
      * Execute an HTTP request and return the response.
      *
@@ -24,7 +27,8 @@ public class RestClient {
      * @return The HTTP response
      */
     public Response executeRequest(ApiRequest request) {
-        LOGGER.info("Executing {} request to {}", request.getMethod(), request.getEndpoint());
+        String endpoint = processEndpoint(request.getEndpoint());
+        LOGGER.info("Executing {} request to {}", request.getMethod(), endpoint);
         
         RequestSpecification requestSpec = RestAssured.given()
                 .log().all();  // Log all request details
@@ -61,25 +65,25 @@ public class RestClient {
         Response response;
         switch (request.getMethod()) {
             case "GET":
-                response = requestSpec.get(request.getEndpoint());
+                response = requestSpec.get(endpoint);
                 break;
             case "POST":
-                response = requestSpec.post(request.getEndpoint());
+                response = requestSpec.post(endpoint);
                 break;
             case "PUT":
-                response = requestSpec.put(request.getEndpoint());
+                response = requestSpec.put(endpoint);
                 break;
             case "DELETE":
-                response = requestSpec.delete(request.getEndpoint());
+                response = requestSpec.delete(endpoint);
                 break;
             case "PATCH":
-                response = requestSpec.patch(request.getEndpoint());
+                response = requestSpec.patch(endpoint);
                 break;
             case "HEAD":
-                response = requestSpec.head(request.getEndpoint());
+                response = requestSpec.head(endpoint);
                 break;
             case "OPTIONS":
-                response = requestSpec.options(request.getEndpoint());
+                response = requestSpec.options(endpoint);
                 break;
             default:
                 throw new IllegalArgumentException("Unsupported HTTP method: " + request.getMethod());
@@ -89,5 +93,31 @@ public class RestClient {
         response.then().log().all();
         
         return response;
+    }
+    
+    /**
+     * Process the endpoint URL to handle both absolute and relative paths.
+     * For relative paths (starting with /), prepend the default base URL.
+     *
+     * @param endpoint The endpoint URL from the request
+     * @return The processed endpoint URL
+     */
+    private String processEndpoint(String endpoint) {
+        if (endpoint == null || endpoint.isEmpty()) {
+            throw new IllegalArgumentException("Endpoint cannot be null or empty");
+        }
+        
+        // If it's already a full URL (starts with http:// or https://), return as is
+        if (endpoint.startsWith("http://") || endpoint.startsWith("https://")) {
+            return endpoint;
+        }
+        
+        // If it's a relative path (starts with /), append to default base URL
+        if (endpoint.startsWith("/")) {
+            return DEFAULT_BASE_URL + endpoint;
+        }
+        
+        // If it doesn't start with /, add a / and append to default base URL
+        return DEFAULT_BASE_URL + "/" + endpoint;
     }
 }

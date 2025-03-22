@@ -1,0 +1,37 @@
+Eventelope Test Execution Report
+==============================
+Generated at: 2025-03-22T16:17:51.952671854
+
+Summary:
+  Total Tests: 3
+  Passed: 0
+  Failed: 3
+  Success Rate: 0%
+
+Detailed Results:
+================
+
+1. Advanced Assertions Test
+   Status: FAILED
+   Description: Demonstrates the use of advanced assertion types beyond simple equality
+   Executed Steps: 0
+   Response Status: 0
+   Failure Reasons:
+     - Step 'Verify API Health': Exception - Connection refused
+
+2. Sample GET API Test
+   Status: FAILED
+   Description: Tests a simple GET request to retrieve user information
+   Executed Steps: 0
+   Response Status: 0
+   Failure Reasons:
+     - Step 'Verify API Health': Exception - Connection refused
+
+3. Sample POST Test
+   Status: FAILED
+   Description: Basic POST request validation
+   Executed Steps: 0
+   Response Status: 0
+   Failure Reasons:
+     - Step 'Verify API Health': Exception - Connection refused
+

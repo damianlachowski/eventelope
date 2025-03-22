@@ -3,7 +3,7 @@ package com.eventelope.parser;
 import com.eventelope.core.TestCase;
 import com.eventelope.model.ApiRequest;
 import com.eventelope.model.ResponseVerifier;
-import com.eventelope.model.TestMetadata;
+import com.eventelope.model.Step;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.yaml.snakeyaml.Yaml;
@@ -22,97 +22,77 @@ import java.util.stream.Collectors;
 
 /**
  * Parses YAML test case files into TestCase objects.
+ * Updated to support the new structured test format with sections for preconditions, setup, execution, and cleanup.
  */
 public class YamlParser {
     private static final Logger LOGGER = LoggerFactory.getLogger(YamlParser.class);
     private final Yaml yaml = new Yaml();
 
     /**
-     * Parse a single YAML test file into a TestCase object.
+     * Parse a single YAML test file into a TestCase object with the new structure.
      *
      * @param file The YAML test file
      * @return The parsed TestCase
      */
     public TestCase parseTestCase(File file) {
         try (FileInputStream fileInputStream = new FileInputStream(file)) {
-            Map<String, Object> testYaml = yaml.load(fileInputStream);
+            Map<String, Object> yamlContent = yaml.load(fileInputStream);
+            
+            // The new format has a root "test" object
+            Map<String, Object> testMap = (Map<String, Object>) yamlContent.get("test");
+            if (testMap == null) {
+                LOGGER.error("Invalid test file format. Missing 'test' root element: {}", file.getAbsolutePath());
+                throw new RuntimeException("Invalid test file format. Missing 'test' root element.");
+            }
             
             TestCase testCase = new TestCase();
             testCase.setFilePath(file.getAbsolutePath());
             
-            // Parse test name and description directly from root level
-            testCase.setTestName((String) testYaml.get("testName"));
-            testCase.setDescription((String) testYaml.get("description"));
+            // Parse basic test information
+            testCase.setName((String) testMap.get("name"));
+            testCase.setDescription((String) testMap.get("description"));
             
-            // Parse API request
-            Map<String, Object> requestMap = (Map<String, Object>) testYaml.get("request");
-            ApiRequest request = new ApiRequest();
-            request.setMethod((String) requestMap.get("method"));
-            request.setEndpoint((String) requestMap.get("endpoint"));
-            
-            // Parse headers if they exist
-            if (requestMap.containsKey("headers")) {
-                Map<String, String> headers = (Map<String, String>) requestMap.get("headers");
-                request.setHeaders(headers);
-            }
-            
-            // Parse payload if it exists
-            if (requestMap.containsKey("payload")) {
-                String payloadValue = (String) requestMap.get("payload");
-                
-                // Check if payload should be loaded from file
-                if (payloadValue.trim().startsWith("file:")) {
-                    LOGGER.info("Loading payload from file for test: {}", testCase.getTestName());
-                    String filePath = payloadValue.substring(5).trim(); // Remove "file:" prefix
-                    
-                    // Resolve the file path (handle relative paths)
-                    String resolvedPath = resolveFilePath(filePath, file);
-                    LOGGER.debug("Resolved payload file path: {}", resolvedPath);
-                    
-                    try {
-                        String fileContent = readPayloadFromFile(resolvedPath);
-                        request.setPayload(fileContent);
-                        LOGGER.debug("Successfully loaded payload from file: {}", resolvedPath);
-                    } catch (IOException e) {
-                        LOGGER.error("Failed to load payload from file: {}", resolvedPath, e);
-                        throw new RuntimeException("Failed to load payload from file: " + resolvedPath + 
-                                                 " - Error: " + e.getMessage(), e);
-                    }
-                } else {
-                    // Existing behavior for inline payloads
-                    request.setPayload(payloadValue);
+            // Parse preconditions section if it exists
+            if (testMap.containsKey("preconditions")) {
+                List<Map<String, Object>> preconditionsList = (List<Map<String, Object>>) testMap.get("preconditions");
+                if (preconditionsList != null) {
+                    List<Step> steps = parseSteps(preconditionsList, file);
+                    testCase.setPreconditions(steps);
                 }
             }
             
-            // Parse user if it exists
-            if (requestMap.containsKey("user")) {
-                request.setUser((String) requestMap.get("user"));
+            // Parse setup section if it exists
+            if (testMap.containsKey("setup")) {
+                List<Map<String, Object>> setupList = (List<Map<String, Object>>) testMap.get("setup");
+                if (setupList != null) {
+                    List<Step> steps = parseSteps(setupList, file);
+                    testCase.setSetup(steps);
+                }
             }
             
-            testCase.setRequest(request);
+            // Parse execution section (mandatory)
+            List<Step> executionSteps = new ArrayList<>();
+            if (testMap.containsKey("execution")) {
+                List<Map<String, Object>> executionList = (List<Map<String, Object>>) testMap.get("execution");
+                if (executionList != null) {
+                    executionSteps = parseSteps(executionList, file);
+                }
+            } else {
+                LOGGER.error("Invalid test file format. Missing 'execution' section: {}", file.getAbsolutePath());
+                throw new RuntimeException("Invalid test file format. Missing mandatory 'execution' section.");
+            }
+            testCase.setExecution(executionSteps);
             
-            // Parse response verifier
-            Map<String, Object> verifierMap = (Map<String, Object>) testYaml.get("verifier");
-            ResponseVerifier verifier = new ResponseVerifier();
-            
-            // Parse expected status code
-            if (verifierMap.containsKey("statusCode")) {
-                verifier.setStatusCode((Integer) verifierMap.get("statusCode"));
+            // Parse cleanup section if it exists
+            if (testMap.containsKey("cleanup")) {
+                List<Map<String, Object>> cleanupList = (List<Map<String, Object>>) testMap.get("cleanup");
+                if (cleanupList != null) {
+                    List<Step> steps = parseSteps(cleanupList, file);
+                    testCase.setCleanup(steps);
+                }
             }
             
-            // Parse expected headers if they exist
-            if (verifierMap.containsKey("headers")) {
-                verifier.setHeaders((Map<String, String>) verifierMap.get("headers"));
-            }
-            
-            // Parse JSONPath assertions if they exist
-            if (verifierMap.containsKey("jsonPathAssertions")) {
-                List<Map<String, Object>> assertions = (List<Map<String, Object>>) verifierMap.get("jsonPathAssertions");
-                verifier.setJsonPathAssertions(assertions);
-            }
-            
-            testCase.setVerifier(verifier);
-            
+            LOGGER.info("Successfully parsed test case: {}", testCase.getName());
             return testCase;
             
         } catch (FileNotFoundException e) {
@@ -122,6 +102,132 @@ public class YamlParser {
             LOGGER.error("Error parsing test file: {}", file.getAbsolutePath(), e);
             throw new RuntimeException("Failed to parse test file: " + file.getAbsolutePath(), e);
         }
+    }
+
+    /**
+     * Parse steps from a section (preconditions, setup, execution, cleanup)
+     * 
+     * @param stepsList List of step objects from YAML
+     * @param testFile The test file (for resolving relative paths)
+     * @return Parsed Step objects
+     */
+    private List<Step> parseSteps(List<Map<String, Object>> stepsList, File testFile) {
+        List<Step> steps = new ArrayList<>();
+        
+        for (Map<String, Object> stepEntry : stepsList) {
+            Map<String, Object> stepMap = (Map<String, Object>) stepEntry.get("step");
+            if (stepMap == null) {
+                LOGGER.warn("Skipping invalid step entry (missing 'step' key)");
+                continue;
+            }
+            
+            Step step = new Step();
+            step.setName((String) stepMap.get("name"));
+            
+            // Parse request
+            if (stepMap.containsKey("request")) {
+                Map<String, Object> requestMap = (Map<String, Object>) stepMap.get("request");
+                ApiRequest request = parseRequest(requestMap, testFile);
+                step.setRequest(request);
+            }
+            
+            // Parse verification criteria (status, assertions, etc.)
+            if (stepMap.containsKey("verify")) {
+                Map<String, Object> verifyMap = (Map<String, Object>) stepMap.get("verify");
+                ResponseVerifier verifier = parseVerifier(verifyMap);
+                step.setVerify(verifier);
+            }
+            
+            steps.add(step);
+        }
+        
+        return steps;
+    }
+
+    /**
+     * Parse an API request section from a step
+     * 
+     * @param requestMap Request YAML map
+     * @param testFile The test file (for resolving relative paths)
+     * @return Parsed ApiRequest
+     */
+    private ApiRequest parseRequest(Map<String, Object> requestMap, File testFile) {
+        ApiRequest request = new ApiRequest();
+        
+        // Method and endpoint are mandatory
+        request.setMethod((String) requestMap.get("method"));
+        request.setEndpoint((String) requestMap.get("endpoint"));
+        
+        // Parse headers if they exist
+        if (requestMap.containsKey("headers")) {
+            Map<String, String> headers = (Map<String, String>) requestMap.get("headers");
+            request.setHeaders(headers);
+        }
+        
+        // Parse payload if it exists
+        if (requestMap.containsKey("payload")) {
+            String payloadValue = (String) requestMap.get("payload");
+            
+            // Check if payload should be loaded from file
+            if (payloadValue.trim().startsWith("file:")) {
+                LOGGER.debug("Loading payload from file");
+                String filePath = payloadValue.substring(5).trim(); // Remove "file:" prefix
+                
+                // Resolve the file path (handle relative paths)
+                String resolvedPath = resolveFilePath(filePath, testFile);
+                LOGGER.debug("Resolved payload file path: {}", resolvedPath);
+                
+                try {
+                    String fileContent = readPayloadFromFile(resolvedPath);
+                    request.setPayload(fileContent);
+                    LOGGER.debug("Successfully loaded payload from file: {}", resolvedPath);
+                } catch (IOException e) {
+                    LOGGER.error("Failed to load payload from file: {}", resolvedPath, e);
+                    throw new RuntimeException("Failed to load payload from file: " + resolvedPath + 
+                                             " - Error: " + e.getMessage(), e);
+                }
+            } else {
+                // Inline payload
+                request.setPayload(payloadValue);
+            }
+        }
+        
+        // Parse authentication/user if it exists
+        if (requestMap.containsKey("user")) {
+            request.setUser((String) requestMap.get("user"));
+        }
+        
+        return request;
+    }
+
+    /**
+     * Parse a response verifier section from a step
+     * 
+     * @param verifyMap Verify YAML map
+     * @return Parsed ResponseVerifier
+     */
+    private ResponseVerifier parseVerifier(Map<String, Object> verifyMap) {
+        ResponseVerifier verifier = new ResponseVerifier();
+        
+        // Parse expected status code (might be 'status' or 'statusCode' for flexibility)
+        if (verifyMap.containsKey("statusCode")) {
+            verifier.setStatusCode((Integer) verifyMap.get("statusCode"));
+        } else if (verifyMap.containsKey("status")) {
+            verifier.setStatusCode((Integer) verifyMap.get("status"));
+        }
+        
+        // Parse expected headers if they exist
+        if (verifyMap.containsKey("headers")) {
+            verifier.setHeaders((Map<String, String>) verifyMap.get("headers"));
+        }
+        
+        // Parse JSONPath assertions if they exist
+        if (verifyMap.containsKey("jsonPathAssertions")) {
+            List<Map<String, Object>> assertions = (List<Map<String, Object>>) verifyMap.get("jsonPathAssertions");
+            verifier.setJsonPathAssertions(assertions);
+        }
+        
+        return verifier;
     }
 
     /**
@@ -144,7 +250,7 @@ public class YamlParser {
                 try {
                     TestCase testCase = parseTestCase(file);
                     testCases.add(testCase);
-                    LOGGER.info("Parsed test case: {}", testCase.getTestName());
+                    LOGGER.info("Parsed test case: {}", testCase.getName());
                 } catch (Exception e) {
                     LOGGER.error("Error parsing test file: {}", file.getAbsolutePath(), e);
                 }

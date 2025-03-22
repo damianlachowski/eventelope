@@ -1,0 +1,21 @@
+Eventelope Test Execution Report
+==============================
+Generated at: 2025-03-22T16:18:05.788570424
+
+Summary:
+  Total Tests: 1
+  Passed: 0
+  Failed: 1
+  Success Rate: 0%
+
+Detailed Results:
+================
+
+1. Advanced Assertions Test
+   Status: FAILED
+   Description: Demonstrates the use of advanced assertion types beyond simple equality
+   Executed Steps: 0
+   Response Status: 0
+   Failure Reasons:
+     - Step 'Verify API Health': Exception - Connection refused
+

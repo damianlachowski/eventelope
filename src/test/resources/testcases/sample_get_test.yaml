@@ -1,4 +1,3 @@
-
 test:
   name: "Sample GET API Test"
   description: "Tests a simple GET request to retrieve user information"
@@ -8,9 +7,9 @@ test:
         name: "Verify API Health"
         request:
           method: GET 
-          endpoint: /health
+          endpoint: /users/1
         verify:
-          status: 200
+          statusCode: 200
 
   execution:
     - step:

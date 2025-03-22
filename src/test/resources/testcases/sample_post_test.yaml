@@ -1,4 +1,3 @@
-
 test:
   name: "Sample POST Test"
   description: "Basic POST request validation"
@@ -8,9 +7,9 @@ test:
         name: "Verify API Health"
         request:
           method: GET
-          endpoint: /health
+          endpoint: /users/1
         verify:
-          status: 200
+          statusCode: 200
 
   execution:
     - step:

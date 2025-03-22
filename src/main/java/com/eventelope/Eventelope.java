@@ -106,7 +106,7 @@ public class Eventelope {
         TestCase testCase = yamlParser.parseTestCase(file);
         
         // Execute test
-        LOGGER.info("Executing test: {}", testCase.getTestName());
+        LOGGER.info("Executing test: {}", testCase.getName());
         TestResult result = testExecutor.executeTest(testCase);
         
         // Generate reports

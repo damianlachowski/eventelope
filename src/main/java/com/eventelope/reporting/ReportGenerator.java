@@ -1,6 +1,7 @@
 package com.eventelope.reporting;
 
 import com.eventelope.core.TestResult;
+import com.eventelope.model.Step;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,6 +17,7 @@ import java.util.List;
 
 /**
  * Generates test execution reports in various formats.
+ * Updated to support the new structured test format.
  */
 public class ReportGenerator {
     private static final Logger LOGGER = LoggerFactory.getLogger(ReportGenerator.class);
@@ -68,11 +70,19 @@ public class ReportGenerator {
             
             for (int i = 0; i < results.size(); i++) {
                 TestResult result = results.get(i);
-                writer.write((i + 1) + ". " + result.getTestCase().getTestName() + "\n");
+                writer.write((i + 1) + ". " + result.getTestName() + "\n");
                 writer.write("   Status: " + (result.isPassed() ? "PASSED" : "FAILED") + "\n");
-                writer.write("   Description: " + result.getTestCase().getDescription() + "\n");
-                writer.write("   HTTP Method: " + result.getTestCase().getRequest().getMethod() + "\n");
-                writer.write("   Endpoint: " + result.getTestCase().getRequest().getEndpoint() + "\n");
+                writer.write("   Description: " + result.getTestDescription() + "\n");
+                
+                // Write information about executed steps
+                writer.write("   Executed Steps: " + result.getExecutedSteps().size() + "\n");
+                if (!result.getExecutedSteps().isEmpty()) {
+                    writer.write("     Steps:\n");
+                    for (String step : result.getExecutedSteps()) {
+                        writer.write("       - " + step + "\n");
+                    }
+                }
+                
                 writer.write("   Response Status: " + result.getStatusCode() + "\n");
                 
                 if (!result.isPassed()) {
@@ -144,6 +154,7 @@ public class ReportGenerator {
             writer.write("    .status.failed { color: #dc3545; }\n");
             writer.write("    .details { margin-top: 10px; }\n");
             writer.write("    .failure-reasons { background-color: #f8d7da; padding: 10px; border-radius: 5px; margin-top: 10px; }\n");
+            writer.write("    .steps-list { background-color: #e9ecef; padding: 10px; border-radius: 5px; margin-top: 10px; }\n");
             writer.write("    .progress-bar { height: 20px; border-radius: 5px; overflow: hidden; background-color: #e9ecef; }\n");
             writer.write("    .progress-bar-inner { height: 100%; background-color: #28a745; width: " + successRate + "%; }\n");
             writer.write("  </style>\n");
@@ -173,12 +184,25 @@ public class ReportGenerator {
                 String testStatus = result.isPassed() ? "passed" : "failed";
                 
                 writer.write("  <div class='test-case " + testStatus + "'>\n");
-                writer.write("    <h3>" + (i + 1) + ". " + result.getTestCase().getTestName() + "</h3>\n");
+                writer.write("    <h3>" + (i + 1) + ". " + result.getTestName() + "</h3>\n");
                 writer.write("    <p><span class='status " + testStatus + "'>" + testStatus.toUpperCase() + "</span></p>\n");
                 writer.write("    <div class='details'>\n");
-                writer.write("      <p><strong>Description:</strong> " + result.getTestCase().getDescription() + "</p>\n");
-                writer.write("      <p><strong>HTTP Method:</strong> " + result.getTestCase().getRequest().getMethod() + "</p>\n");
-                writer.write("      <p><strong>Endpoint:</strong> " + result.getTestCase().getRequest().getEndpoint() + "</p>\n");
+                writer.write("      <p><strong>Description:</strong> " + result.getTestDescription() + "</p>\n");
+                
+                // Add executed steps section
+                writer.write("      <div class='steps-list'>\n");
+                writer.write("        <p><strong>Executed Steps (" + result.getExecutedSteps().size() + "):</strong></p>\n");
+                if (!result.getExecutedSteps().isEmpty()) {
+                    writer.write("        <ol>\n");
+                    for (String step : result.getExecutedSteps()) {
+                        writer.write("          <li>" + step + "</li>\n");
+                    }
+                    writer.write("        </ol>\n");
+                } else {
+                    writer.write("        <p>No steps were executed successfully.</p>\n");
+                }
+                writer.write("      </div>\n");
+                
                 writer.write("      <p><strong>Response Status:</strong> " + result.getStatusCode() + "</p>\n");
                 
                 // Add failure reasons for failed tests

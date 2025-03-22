@@ -9,6 +9,7 @@ import java.util.List;
 
 /**
  * Contains the results of a test execution including status, response data, and any failure messages.
+ * Updated to support the new structured test format.
  */
 public class TestResult {
     private TestCase testCase;
@@ -20,6 +21,8 @@ public class TestResult {
     private Response response;
     private LocalDateTime executionTime;
     private long executionDurationMs;
+    // For tracking successfully executed steps
+    private List<String> executedSteps = new ArrayList<>();
 
     public TestResult(TestCase testCase) {
         this.testCase = testCase;
@@ -52,6 +55,14 @@ public class TestResult {
 
     public void addFailureMessage(String message) {
         this.failureMessages.add(message);
+    }
+
+    public void addExecutedStep(String stepName) {
+        this.executedSteps.add(stepName);
+    }
+
+    public List<String> getExecutedSteps() {
+        return executedSteps;
     }
 
     public int getStatusCode() {
@@ -102,12 +113,27 @@ public class TestResult {
         this.executionDurationMs = executionDurationMs;
     }
 
+    /**
+     * Get the test name from the updated TestCase model
+     */
+    public String getTestName() {
+        return testCase.getName();
+    }
+
+    /**
+     * Get the test description from the updated TestCase model
+     */
+    public String getTestDescription() {
+        return testCase.getDescription();
+    }
+
     @Override
     public String toString() {
         return "TestResult{" +
-                "testCase=" + testCase.getTestName() +
+                "testCase=" + testCase.getName() +
                 ", passed=" + passed +
                 ", statusCode=" + statusCode +
+                ", executedSteps=" + executedSteps.size() +
                 ", executionTime=" + executionTime +
                 "}";
     }

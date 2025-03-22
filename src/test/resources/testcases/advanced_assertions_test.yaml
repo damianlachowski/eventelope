@@ -1,4 +1,3 @@
-
 test:
   name: "Advanced Assertions Test"
   description: "Demonstrates the use of advanced assertion types beyond simple equality"
@@ -8,9 +7,9 @@ test:
         name: "Verify API Health"
         request:
           method: GET
-          endpoint: /health
+          endpoint: /users/1
         verify:
-          status: 200
+          statusCode: 200
 
   execution:
     - step:
