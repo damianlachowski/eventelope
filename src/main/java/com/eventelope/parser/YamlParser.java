@@ -136,12 +136,12 @@ public class YamlParser {
     }
 
     /**
-     * Read body content from a JSON file.
+     * Read payload content from a JSON file.
      *
      * @param filePath Path to the JSON file
      * @return The file content as a string
      */
-    private String readBodyFromFile(String filePath) throws IOException {
+    private String readPayloadFromFile(String filePath) throws IOException {
         Path path = Paths.get(filePath);
         return new String(Files.readAllBytes(path));
     }

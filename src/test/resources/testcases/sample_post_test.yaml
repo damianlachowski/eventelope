@@ -4,8 +4,12 @@ description: Tests a POST request to create a new resource
 request:
   method: POST
   endpoint: https://jsonplaceholder.typicode.com/posts
-  # Raw JSON payload instead of structured body
-  payload: '{"title": "Eventelope Test", "body": "This is a test post created by Eventelope framework", "userId": 1}'
+  payload: |
+    {
+      "title": "Eventelope Test",
+      "body": "This is a test post created by Eventelope framework",
+      "userId": 1
+    }
 
 verifier:
   statusCode: 201
