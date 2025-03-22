@@ -1,11 +1,13 @@
 package com.eventelope.core;
 
+import com.eventelope.context.TestStepVariable;
 import io.restassured.http.Header;
 import io.restassured.response.Response;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -27,6 +29,8 @@ public class TestResult {
     private List<String> executedSteps = new ArrayList<>();
     // For storing test variables (extracted values)
     private Map<String, Object> variables = new HashMap<>();
+    // For storing variable tracking information (which step created/updated each variable)
+    private Map<String, TestStepVariable> variableTracking = new LinkedHashMap<>();
 
     public TestResult(TestCase testCase) {
         this.testCase = testCase;
@@ -157,6 +161,36 @@ public class TestResult {
      */
     public void setVariable(String name, Object value) {
         variables.put(name, value);
+    }
+    
+    /**
+     * Get all variable tracking information 
+     */
+    public Map<String, TestStepVariable> getVariableTracking() {
+        return variableTracking;
+    }
+    
+    /**
+     * Set variable tracking information
+     */
+    public void setVariableTracking(Map<String, TestStepVariable> variableTracking) {
+        this.variableTracking = variableTracking;
+    }
+    
+    /**
+     * Add variable tracking information for a specific variable
+     */
+    public void addVariableTracking(String name, TestStepVariable tracking) {
+        this.variableTracking.put(name, tracking);
+        // Also ensure the basic variable is set
+        this.variables.put(name, tracking.getValue());
+    }
+    
+    /**
+     * Get tracking information for a specific variable
+     */
+    public TestStepVariable getVariableTrackingInfo(String name) {
+        return this.variableTracking.get(name);
     }
 
     @Override

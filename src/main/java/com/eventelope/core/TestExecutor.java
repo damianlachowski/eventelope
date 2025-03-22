@@ -3,6 +3,7 @@ package com.eventelope.core;
 import com.eventelope.assertion.AssertionProcessor;
 import com.eventelope.condition.ConditionEvaluator;
 import com.eventelope.context.TestContext;
+import com.eventelope.context.TestStepVariable;
 import com.eventelope.extraction.ResponseExtractor;
 import com.eventelope.http.RestClient;
 import com.eventelope.model.ApiRequest;
@@ -14,6 +15,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Executes test cases and returns results.
@@ -99,6 +101,13 @@ public class TestExecutor {
             
             // Store variables from test context in result for reporting
             result.setVariables(testContext.getAllVariables());
+            
+            // Store variable tracking information
+            if (!testContext.getAllVariablesWithTracking().isEmpty()) {
+                for (Map.Entry<String, TestStepVariable> entry : testContext.getAllVariablesWithTracking().entrySet()) {
+                    result.addVariableTracking(entry.getKey(), entry.getValue());
+                }
+            }
             
         } catch (Exception e) {
             result.setPassed(false);
@@ -223,7 +232,7 @@ public class TestExecutor {
                     // Extract values from response if there are extractions defined
                     if (verifier != null && verifier.getExtractions() != null && !verifier.getExtractions().isEmpty()) {
                         LOGGER.debug("Performing extractions for step: {}", step.getName());
-                        responseExtractor.extractAndStoreValues(responseBody, verifier.getExtractions(), context);
+                        responseExtractor.extractAndStoreValues(responseBody, verifier.getExtractions(), context, step.getName());
                     }
                     
                     String stepInfo = step.getName();

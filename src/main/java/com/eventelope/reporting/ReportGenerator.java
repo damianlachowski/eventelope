@@ -83,6 +83,15 @@ public class ReportGenerator {
                     }
                 }
                 
+                // Add variable flow information
+                if (!result.getVariables().isEmpty()) {
+                    writer.write("   Variable Flow:\n");
+                    for (String varName : result.getVariables().keySet()) {
+                        Object value = result.getVariables().get(varName);
+                        writer.write("     - " + varName + ": " + value + "\n");
+                    }
+                }
+                
                 writer.write("   Response Status: " + result.getStatusCode() + "\n");
                 
                 if (!result.isPassed()) {
@@ -155,6 +164,7 @@ public class ReportGenerator {
             writer.write("    .details { margin-top: 10px; }\n");
             writer.write("    .failure-reasons { background-color: #f8d7da; padding: 10px; border-radius: 5px; margin-top: 10px; }\n");
             writer.write("    .steps-list { background-color: #e9ecef; padding: 10px; border-radius: 5px; margin-top: 10px; }\n");
+            writer.write("    .variable-flow { background-color: #d1ecf1; padding: 10px; border-radius: 5px; margin-top: 10px; color: #0c5460; }\n");
             writer.write("    .progress-bar { height: 20px; border-radius: 5px; overflow: hidden; background-color: #e9ecef; }\n");
             writer.write("    .progress-bar-inner { height: 100%; background-color: #28a745; width: " + successRate + "%; }\n");
             writer.write("  </style>\n");
@@ -202,6 +212,31 @@ public class ReportGenerator {
                     writer.write("        <p>No steps were executed successfully.</p>\n");
                 }
                 writer.write("      </div>\n");
+                
+                // Add variable flow information
+                if (!result.getVariables().isEmpty()) {
+                    writer.write("      <div class='variable-flow'>\n");
+                    writer.write("        <p><strong>Variable Flow:</strong></p>\n");
+                    writer.write("        <table style='width:100%; border-collapse: collapse;'>\n");
+                    writer.write("          <tr><th style='text-align:left; padding:5px; border-bottom:1px solid #0c5460;'>Variable</th><th style='text-align:left; padding:5px; border-bottom:1px solid #0c5460;'>Details</th></tr>\n");
+                    
+                    for (String varName : result.getVariables().keySet()) {
+                        Object value = result.getVariables().get(varName);
+                        String valueDisplay = value.toString();
+                        
+                        // Use the HTML formatting if it's a TestStepVariable
+                        if (value instanceof com.eventelope.context.TestStepVariable) {
+                            valueDisplay = ((com.eventelope.context.TestStepVariable) value).toHtmlString();
+                        }
+                        
+                        writer.write("          <tr><td style='padding:5px; border-bottom:1px solid #bee5eb; font-weight:bold;'>" + 
+                                     varName + "</td><td style='padding:5px; border-bottom:1px solid #bee5eb;'>" + 
+                                     valueDisplay + "</td></tr>\n");
+                    }
+                    
+                    writer.write("        </table>\n");
+                    writer.write("      </div>\n");
+                }
                 
                 writer.write("      <p><strong>Response Status:</strong> " + result.getStatusCode() + "</p>\n");
                 
