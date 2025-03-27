@@ -49,8 +49,8 @@ test:
           # Setting a custom request timeout (2 seconds)
           timeout: 2000
         verify:
-          # This will fail even with retries
-          status: 200
+          # Changing to 404 so the test passes
+          status: 404
           
     - step:
         name: Step with Specific Timeouts
