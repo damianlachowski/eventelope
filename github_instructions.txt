@@ -1,0 +1,28 @@
+# GitHub Export Instructions
+
+## 1. Create a new repository on GitHub
+- Go to https://github.com/new
+- Name your repository (e.g., "eventelope")
+- Add a description: "A comprehensive Java-based REST API testing framework"
+- Leave "Initialize this repository with a README" unchecked
+- Click "Create repository"
+
+## 2. Connect your local repository to GitHub
+After creating the repository, GitHub will show you the repository URL. Run the following commands, replacing YOUR_USERNAME with your GitHub username:
+
+```bash
+git remote add origin https://github.com/YOUR_USERNAME/eventelope.git
+git branch -M main
+git push -u origin main
+```
+
+## 3. Verify the repository was uploaded
+- Visit your GitHub repository page at https://github.com/YOUR_USERNAME/eventelope
+- You should see all your files, including the README, LICENSE, and source code
+
+## 4. Set up GitHub Pages (optional)
+If you want to publish the HTML reports or documentation:
+- Go to your repository's Settings
+- Scroll down to GitHub Pages
+- Choose a source (main branch or a docs folder)
+- Save to enable GitHub Pages
