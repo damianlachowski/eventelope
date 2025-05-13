@@ -21,26 +21,26 @@ Eventelope is designed to simplify REST API testing through a YAML-based configu
 
 ### Prerequisites
 
-- Java 21 or higher
-- Gradle 8.0 or higher
+- Java 17 or higher
+- Maven 3.8+ (included via Maven wrapper)
 
 ### Building the Project
 
 ```bash
-./gradlew build
+./mvnw clean package
 ```
 
 ### Running Tests
 
 ```bash
 # Run all tests
-./gradlew run
+./mvnw exec:java -Dexec.args="--testDir src/test/resources/testcases"
 
 # Run a specific test file
-./gradlew run --args="--testDir src/test/resources/testcases/specific_test.yaml"
+./mvnw exec:java -Dexec.args="--testDir src/test/resources/testcases/specific_test.yaml"
 
-# Run all tests in a directory
-./gradlew run --args="--testDir src/test/resources/testcases"
+# Run tests in a specific directory
+./mvnw exec:java -Dexec.args="--testDir path/to/test/directory"
 ```
 
 ## Test Structure

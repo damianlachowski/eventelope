@@ -13,148 +13,27 @@ author = "agent"
 
 [[workflows.workflow.tasks]]
 task = "workflow.run"
-args = "Eventelope Runner"
+args = "Run All Tests"
 
 [[workflows.workflow.tasks]]
 task = "workflow.run"
-args = "run_eventelope"
-
-[[workflows.workflow.tasks]]
-task = "workflow.run"
-args = "Advanced Assertions Test"
-
-[[workflows.workflow.tasks]]
-task = "workflow.run"
-args = "Variable Extraction Test"
-
-[[workflows.workflow.tasks]]
-task = "workflow.run"
-args = "Conditional Steps Test"
-
-[[workflows.workflow.tasks]]
-task = "workflow.run"
-args = "Eventelope All Tests"
-
-[[workflows.workflow.tasks]]
-task = "workflow.run"
-args = "Retry and Timeout Test"
-
-[[workflows.workflow.tasks]]
-task = "workflow.run"
-args = "Template Variables Test"
+args = "Run Eventelope"
 
 [[workflows.workflow]]
-name = "Eventelope Runner"
+name = "Run All Tests"
 author = "agent"
-
-[workflows.workflow.metadata]
-agentRequireRestartOnSave = false
-
-[[workflows.workflow.tasks]]
-task = "packager.installForAll"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "./gradlew run --args=\"--testDir src/test/resources/testcases\""
-waitForPort = 5000
+args = "./mvnw compile exec:java -Dexec.args=\"--testDir src/test/resources/testcases\""
 
 [[workflows.workflow]]
-name = "run_eventelope"
+name = "Run Eventelope"
 author = "agent"
-
-[workflows.workflow.metadata]
-agentRequireRestartOnSave = false
-
-[[workflows.workflow.tasks]]
-task = "packager.installForAll"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "./gradlew run"
-
-[[workflows.workflow]]
-name = "Advanced Assertions Test"
-author = "agent"
-
-[workflows.workflow.metadata]
-agentRequireRestartOnSave = false
-
-[[workflows.workflow.tasks]]
-task = "packager.installForAll"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "./gradlew run --args=\"--testDir src/test/resources/testcases/advanced_assertions_test.yaml\""
-
-[[workflows.workflow]]
-name = "Variable Extraction Test"
-author = "agent"
-
-[workflows.workflow.metadata]
-agentRequireRestartOnSave = false
-
-[[workflows.workflow.tasks]]
-task = "packager.installForAll"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "./gradlew run --args=\"--testDir src/test/resources/testcases/variable_extraction_test.yaml\""
-
-[[workflows.workflow]]
-name = "Conditional Steps Test"
-author = "agent"
-
-[workflows.workflow.metadata]
-agentRequireRestartOnSave = false
-
-[[workflows.workflow.tasks]]
-task = "packager.installForAll"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "./gradlew run --args=\"--testDir src/test/resources/testcases/conditional_steps_test.yaml\""
-
-[[workflows.workflow]]
-name = "Eventelope All Tests"
-author = "agent"
-
-[workflows.workflow.metadata]
-agentRequireRestartOnSave = false
-
-[[workflows.workflow.tasks]]
-task = "packager.installForAll"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "./gradlew run --args=\"--testDir src/test/resources/testcases\""
-
-[[workflows.workflow]]
-name = "Retry and Timeout Test"
-author = "agent"
-
-[workflows.workflow.metadata]
-agentRequireRestartOnSave = false
-
-[[workflows.workflow.tasks]]
-task = "packager.installForAll"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "./gradlew run --args=\"--testDir src/test/resources/testcases/retry_and_timeout_test.yaml\""
-
-[[workflows.workflow]]
-name = "Template Variables Test"
-author = "agent"
-
-[workflows.workflow.metadata]
-agentRequireRestartOnSave = false
-
-[[workflows.workflow.tasks]]
-task = "packager.installForAll"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "./gradlew run --args=\"--testDir src/test/resources/testcases/template_variables_test.yaml\""
+args = "./mvnw exec:java -Dexec.args=\"--testDir src/test/resources/testcases\""
 
 [deployment]
-run = ["sh", "-c", "./gradlew run --args=\"--testDir src/test/resources/testcases\""]
+run = ["sh", "-c", "./mvnw exec:java -Dexec.args=\"--testDir src/test/resources/testcases\""]
