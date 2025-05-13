@@ -22,25 +22,25 @@ Eventelope is designed to simplify REST API testing through a YAML-based configu
 ### Prerequisites
 
 - Java 17 or higher
-- Maven 3.8+ (included via Maven wrapper)
+- Maven 3.8+ (must be installed separately)
 
 ### Building the Project
 
 ```bash
-./mvnw clean package
+mvn clean package
 ```
 
 ### Running Tests
 
 ```bash
 # Run all tests
-./mvnw exec:java -Dexec.args="--testDir src/test/resources/testcases"
+mvn exec:java -Dexec.args="--testDir src/test/resources/testcases"
 
 # Run a specific test file
-./mvnw exec:java -Dexec.args="--testDir src/test/resources/testcases/specific_test.yaml"
+mvn exec:java -Dexec.args="--testDir src/test/resources/testcases/specific_test.yaml"
 
 # Run tests in a specific directory
-./mvnw exec:java -Dexec.args="--testDir path/to/test/directory"
+mvn exec:java -Dexec.args="--testDir path/to/test/directory"
 ```
 
 ## Test Structure

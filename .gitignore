@@ -7,9 +7,6 @@ pom.xml.next
 release.properties
 dependency-reduced-pom.xml
 buildNumber.properties
-.mvn/timing.properties
-!.mvn/wrapper/maven-wrapper.jar
-!.mvn/wrapper/maven-wrapper.properties
 
 # Build directories
 build/
@@ -31,15 +28,12 @@ build/
 *.log
 
 # Package files 
+*.jar
 *.war
 *.ear
 *.zip
 *.tar.gz
 *.rar
-
-# Maven wrapper jar is an exception - we want to include it
-!mvnw.jar
-!maven-wrapper.jar
 
 # JVM crash logs
 hs_err_pid*
